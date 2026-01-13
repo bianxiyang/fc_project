@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>比分修改审核 - FC足球项目</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+
+    <style>
+        /* 审核表格样式 */
+        .audit-table {
+            margin-top: 20px;
+        }
+        
+        /* 状态标签样式 */
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+        
+        .status-approved {
+            background-color: #28a745;
+            color: #fff;
+        }
+        
+        .status-rejected {
+            background-color: #dc3545;
+            color: #fff;
+        }
+        
+        /* 比赛类型样式 */
+        .match-type {
+            font-weight: bold;
+        }
+        
+        .match-type-normal {
+            color: #007bff;
+        }
+        
+        .match-type-tournament {
+            color: #dc3545;
+        }
+        
+        /* 基础表格样式 */
+        .table {
+            width: 100%;
+            table-layout: fixed;
+        }
+        
+        /* 确保表头和数据行对齐 */
+        .table th,
+        .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        /* 响应式表格样式 */
+        @media (max-width: 768px) {
+            /* 调整表格字体大小 */
+            .table {
+                font-size: 0.75rem;
+            }
+            
+            /* 调整表头字体大小 */
+            .table th {
+                font-size: 0.7rem;
+                padding: 0.3rem;
+                white-space: nowrap;
+            }
+            
+            /* 调整表格内容padding */
+            .table td {
+                padding: 0.3rem;
+                white-space: nowrap;
+            }
+            
+            /* 调整按钮大小 */
+            .btn-sm {
+                padding: 0.2rem 0.4rem;
+                font-size: 0.65rem;
+                margin: 0.1rem;
+            }
+            
+            /* 调整比赛ID列的宽度 */
+            .table th:nth-child(1),
+            .table td:nth-child(1) {
+                min-width: 60px;
+                max-width: 80px;
+                text-align: center;
+            }
+            
+            /* 调整比赛信息列的宽度（已隐藏） */
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                min-width: 0;
+                max-width: 0;
+                overflow: hidden;
+            }
+            
+            /* 调整赛事类型列的宽度 */
+            .table th:nth-child(3),
+            .table td:nth-child(3) {
+                min-width: 80px;
+                max-width: 100px;
+                text-align: center;
+            }
+            
+            /* 调整队伍名称列的宽度 */
+            .table th:nth-child(4),
+            .table td:nth-child(4),
+            .table th:nth-child(7),
+            .table td:nth-child(7) {
+                min-width: 80px;
+                max-width: 120px;
+                text-align: center;
+            }
+            
+            /* 调整主队比分和客队比分列的宽度（已隐藏） */
+            .table th:nth-child(5),
+            .table td:nth-child(5),
+            .table th:nth-child(6),
+            .table td:nth-child(6) {
+                min-width: 0;
+                max-width: 0;
+                overflow: hidden;
+            }
+            
+            /* 调整提交比分列的宽度 */
+            .table th:nth-child(8),
+            .table td:nth-child(8) {
+                min-width: 80px;
+                max-width: 100px;
+                text-align: center;
+            }
+            
+            /* 确保操作列始终可见 */
+            .table th:nth-child(12),
+            .table td:nth-child(12) {
+                min-width: 100px;
+                text-align: center;
+            }
+        }
+        
+        /* 超小屏幕设备额外调整 */
+        @media (max-width: 576px) {
+            /* 进一步调整字体大小 */
+            .table {
+                font-size: 0.6rem;
+            }
+            
+            /* 调整表头字体大小和样式 */
+            .table th {
+                font-size: 0.55rem;
+                padding: 0.2rem 0.1rem;
+                white-space: nowrap;
+            }
+            
+            /* 调整表格内容padding */
+            .table td {
+                padding: 0.2rem 0.1rem;
+            }
+            
+            /* 调整按钮大小 */
+            .btn-sm {
+                padding: 0.1rem 0.2rem;
+                font-size: 0.5rem;
+                margin: 0.05rem;
+            }
+            
+            /* 调整比赛ID列的宽度 */
+            .table th:nth-child(1),
+            .table td:nth-child(1) {
+                min-width: 40px;
+                max-width: 50px;
+                text-align: center;
+            }
+            
+            /* 调整比赛信息列的宽度（已隐藏） */
+            .table th:nth-child(2),
+            .table td:nth-child(2) {
+                min-width: 0;
+                max-width: 0;
+                overflow: hidden;
+            }
+            
+            /* 调整赛事类型列的宽度 */
+            .table th:nth-child(3),
+            .table td:nth-child(3) {
+                min-width: 50px;
+                max-width: 70px;
+                text-align: center;
+                font-size: 0.55rem;
+            }
+            
+            /* 调整队伍名称列的宽度 */
+            .table th:nth-child(4),
+            .table td:nth-child(4),
+            .table th:nth-child(7),
+            .table td:nth-child(7) {
+                min-width: 50px;
+                max-width: 70px;
+                text-align: center;
+            }
+            
+            /* 调整主队比分和客队比分列的宽度（已隐藏） */
+            .table th:nth-child(5),
+            .table td:nth-child(5),
+            .table th:nth-child(6),
+            .table td:nth-child(6) {
+                min-width: 0;
+                max-width: 0;
+                overflow: hidden;
+            }
+            
+            /* 调整提交比分列的宽度 */
+            .table th:nth-child(8),
+            .table td:nth-child(8) {
+                min-width: 60px;
+                max-width: 70px;
+                text-align: center;
+                font-size: 0.55rem;
+            }
+            
+            /* 确保操作列始终可见 */
+            .table th:nth-child(12) {
+                min-width: 80px;
+                text-align: center;
+            }
+            
+            .table td:nth-child(12) {
+                min-width: 80px;
+                padding: 0.2rem 0;
+            }
+            
+            /* 调整按钮为垂直排列 */
+            .table td:nth-child(12) {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.05rem;
+            }
+            
+            /* 调整表格容器 */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                margin: 0 -15px;
+                padding: 0 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">FC足球项目</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/rank-table">积分榜</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/striker-table">射手榜</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/match-score">积分赛录入</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/tournament-score">淘汰赛比分</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/audit-page">比分审核</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                        <a class="nav-link" href="/schedule-generator">赛程生成器</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                        <a class="nav-link" href="/simple-schedule">简易赛程</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                        <a class="nav-link" href="/fc-user">用户管理</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                        <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/tournament-tree">淘汰赛树状图</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                        <a class="nav-link" href="/permission-config">权限配置</a>
+                    </li>
+                </ul>
+                <!-- 右侧用户信息和退出按钮 -->
+                <div class="d-flex align-items-center">
+                    <span class="text-white me-3" sec:authentication="name"></span>
+                    <form th:action="@{/logout}" method="post">
+                        <button type="submit" class="btn btn-outline-light">退出登录</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 主内容区 -->
+    <main class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2>比分修改审核</h2>
+                    </div>
+                    <div class="card-body">
+                        <h5>待审核记录</h5>
+                        <div id="audit-list" class="audit-table">
+                            <!-- 审核记录将通过JavaScript动态加载 -->
+                            <div class="text-center py-5" id="loading-message">
+                                <div class="spinner-border" role="status">
+                                    <span class="visually-hidden">加载中...</span>
+                                </div>
+                                <p class="mt-2">正在加载待审核记录...</p>
+                            </div>
+                            <div id="no-audit-message" class="text-center py-5" style="display: none;">
+                                <p class="text-muted">暂无待审核的比分修改记录</p>
+                            </div>
+                            <!-- 自定义响应式表格容器 -->
+                            <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                                <table class="table table-bordered table-striped" id="audit-table" style="display: none; min-width: 600px;">
+                                    <thead>
+                                        <tr>
+                                            <th>比赛ID</th>
+                                            <th class="d-none">比赛信息</th>
+                                            <th>赛事类型</th>
+                                            <th>主队</th>
+                                            <th class="d-none">主队比分</th>
+                                            <th class="d-none">客队比分</th>
+                                            <th>客队</th>
+                                            <th>提交比分</th>
+                                            <th class="d-none">比赛状态</th>
+                                            <th class="d-none">提交人</th>
+                                            <th class="d-none">提交时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="audit-table-body">
+                                        <!-- 动态生成的行 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 拒绝理由模态框 -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rejectModalLabel">拒绝比分修改</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reject-form">
+                        <div class="mb-3">
+                            <label for="reject-reason" class="form-label">拒绝理由</label>
+                            <textarea class="form-control" id="reject-reason" rows="3" required></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="confirm-reject">确认拒绝</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 审核页面JS -->
+    <script>
+        let currentAuditId = null;
+        let currentAuditType = null;
+        
+        // 页面加载时获取待审核记录
+        $(document).ready(function() {
+            loadPendingAudits();
+        });
+        
+        // 加载待审核记录
+        function loadPendingAudits() {
+            // 同时请求普通比赛和淘汰赛的审核记录
+            $.when(
+                $.ajax({
+                    url: '/api/matches/audit/pending',
+                    type: 'GET',
+                    dataType: 'json'
+                }),
+                $.ajax({
+                    url: '/api/tournaments/audit/pending',
+                    type: 'GET',
+                    dataType: 'json'
+                })
+            ).done(function(matchResponse, tournamentResponse) {
+                let allAudits = [];
+                
+                // 处理普通比赛审核记录
+                if (matchResponse[0].success) {
+                    matchResponse[0].data.forEach(audit => {
+                        audit.type = 'normal'; // 标记为普通比赛
+                        allAudits.push(audit);
+                    });
+                }
+                
+                // 处理淘汰赛审核记录
+                if (tournamentResponse[0].success) {
+                    tournamentResponse[0].data.forEach(audit => {
+                        audit.type = 'tournament'; // 标记为淘汰赛
+                        allAudits.push(audit);
+                    });
+                }
+                
+                renderAuditTable(allAudits);
+            }).fail(function(xhr, status, error) {
+                showError('加载审核记录失败：' + error);
+            }).always(function() {
+                $('#loading-message').hide();
+            });
+        }
+        
+        // 渲染审核表格
+        function renderAuditTable(audits) {
+            const tbody = $('#audit-table-body');
+            tbody.empty();
+            
+            if (audits.length === 0) {
+                $('#no-audit-message').show();
+                $('#audit-table').hide();
+                return;
+            }
+            
+            $('#no-audit-message').hide();
+            $('#audit-table').show();
+            
+            audits.forEach(audit => {
+                const tr = $('<tr></tr>');
+                
+                // 获取状态文本
+                let statusText = '';
+                switch (audit.status) {
+                    case 0: statusText = '未开始'; break;
+                    case 1: statusText = '进行中'; break;
+                    case 2: statusText = '已结束'; break;
+                    default: statusText = '未知';
+                }
+                
+                // 获取比赛类型和信息
+                let matchTypeClass = audit.type === 'normal' ? 'match-type-normal' : 'match-type-tournament';
+                let matchTypeText = audit.type === 'normal' ? '普通比赛' : '淘汰赛';
+                let matchInfo = audit.type === 'normal' ? 
+                    audit.match.matchNo : 
+                    `轮次 ${audit.match.round} - 第 ${audit.match.matchNumber} 场 - 第 ${audit.match.gameNumber} 局`;
+                
+                tr.append(`
+                    <td>${audit.match.id}</td>
+                    <td class="d-none">${matchInfo}</td>
+                    <td>${matchTypeText}</td>
+                    <td>${audit.match.homeTeam.name}</td>
+                    <td class="d-none">${audit.homeScore}</td>
+                    <td class="d-none">${audit.awayScore}</td>
+                    <td>${audit.match.awayTeam.name}</td>
+                    <td>${audit.homeScore} - ${audit.awayScore}</td>
+                    <td class="d-none">${statusText}</td>
+                    <td class="d-none">${audit.submittedBy.name}</td>
+                    <td class="d-none">${new Date(audit.submittedAt).toLocaleString()}</td>
+                    <td class="text-center">
+                        <div class="d-flex flex-column flex-sm-row gap-1 justify-content-center">
+                            <button class="btn btn-success btn-sm" onclick="approveAudit(${audit.id}, '${audit.type}')">批准</button>
+                            <button class="btn btn-danger btn-sm" onclick="showRejectModal(${audit.id}, '${audit.type}')">拒绝</button>
+                        </div>
+                    </td>
+                `);
+                
+                tbody.append(tr);
+            });
+        }
+        
+        // 显示拒绝模态框
+        function showRejectModal(auditId, auditType) {
+            currentAuditId = auditId;
+            currentAuditType = auditType;
+            $('#reject-reason').val('');
+            $('#rejectModal').modal('show');
+        }
+        
+        // 批准审核
+        function approveAudit(auditId, auditType) {
+            if (confirm('确定要批准这条比分修改吗？')) {
+                let url = auditType === 'normal' ? 
+                    `/api/matches/audit/${auditId}/approve` : 
+                    `/api/tournaments/audit/${auditId}/approve`;
+                
+                $.ajax({
+                    url: url,
+                    type: 'PUT',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showSuccess('批准成功');
+                            loadPendingAudits(); // 重新加载审核列表
+                        } else {
+                            showError('批准失败：' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showError('批准失败：' + error);
+                    }
+                });
+            }
+        }
+        
+        // 确认拒绝
+        $('#confirm-reject').click(function() {
+            const rejectReason = $('#reject-reason').val().trim();
+            if (!rejectReason) {
+                alert('请输入拒绝理由');
+                return;
+            }
+            
+            if (confirm('确定要拒绝这条比分修改吗？')) {
+                let url = currentAuditType === 'normal' ? 
+                    `/api/matches/audit/${currentAuditId}/reject` : 
+                    `/api/tournaments/audit/${currentAuditId}/reject`;
+                
+                $.ajax({
+                    url: url,
+                    type: 'PUT',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ rejectReason: rejectReason }),
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            showSuccess('拒绝成功');
+                            $('#rejectModal').modal('hide');
+                            loadPendingAudits(); // 重新加载审核列表
+                        } else {
+                            showError('拒绝失败：' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showError('拒绝失败：' + error);
+                    }
+                });
+            }
+        });
+        
+        // 显示成功消息
+        function showSuccess(message) {
+            alert(message);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            alert(message);
+        }
+    </script>
+</body>
+</html>

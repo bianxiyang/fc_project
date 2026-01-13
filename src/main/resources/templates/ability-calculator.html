@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>球员能力值计算器 - 2025新球场公会</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ability-value {
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .nav-item {
+            margin-right: 10px;
+        }
+        .nav-link {
+            color: #007bff;
+        }
+        .nav-link:hover {
+            color: #0056b3;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .exchange-table {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .exchange-table h4 {
+            margin-bottom: 15px;
+        }
+        .exchange-table ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .exchange-table li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 首页链接 -->
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <!-- 比赛比分链接 - 允许普通用户访问 -->
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link" href="/tournament-score">淘汰赛录入</a>
+                        </li>
+                        <!-- 淘汰赛树状图链接 - 允许所有用户访问 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/tournament-tree">淘汰赛树状图</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/simple-schedule">简易赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/fc-user">用户管理</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/permission-config">权限配置</a>
+                        </li>
+                    </ul>
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-calculator"></i> 球员能力值计算器</h1>
+        </div>
+        
+        <!-- 计算器卡片 -->
+        <div class="card">
+            <div class="card-body">
+                <!-- 兑换关系说明 -->
+                <div class="exchange-table" hidden>
+                    <h4>球员能力值兑换关系（138到149）</h4>
+                    <ul>
+                        <li>139 = 4个138</li>
+                        <li>140 = 8个139</li>
+                        <li>141 = 4个140</li>
+                        <li>142 = 8个141</li>
+                        <li>143 = 3个142</li>
+                        <li>144 = 2个143</li>
+                        <li>145 = 2个144</li>
+                        <li>146 = 3个145</li>
+                        <li>147 = 3个146</li>
+                        <li>148 = 3个147</li>
+                        <li>149 = 3个148</li>
+                    </ul>
+                </div>
+                
+                <!-- 计算器表单 -->
+                <form id="calculator-form">
+                    <div class="row">
+                        <div class="col">
+                            <h4>输入球员个数</h4>
+                            <!-- 固定显示所有能力值的输入框 - 自适应布局 -->
+                            <div id="ability-inputs" class="row g-3">
+                                <!-- 能力值138-149的输入框 - 改为自适应网格布局 -->
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">138</label>
+                                    <input type="number" class="form-control ability-input" data-ability="138" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">139</label>
+                                    <input type="number" class="form-control ability-input" data-ability="139" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">140</label>
+                                    <input type="number" class="form-control ability-input" data-ability="140" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">141</label>
+                                    <input type="number" class="form-control ability-input" data-ability="141" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">142</label>
+                                    <input type="number" class="form-control ability-input" data-ability="142" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">143</label>
+                                    <input type="number" class="form-control ability-input" data-ability="143" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">144</label>
+                                    <input type="number" class="form-control ability-input" data-ability="144" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">145</label>
+                                    <input type="number" class="form-control ability-input" data-ability="145" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">146</label>
+                                    <input type="number" class="form-control ability-input" data-ability="146" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">147</label>
+                                    <input type="number" class="form-control ability-input" data-ability="147" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">148</label>
+                                    <input type="number" class="form-control ability-input" data-ability="148" min="0" value="0">
+                                </div>
+                                <div class="col-sm-6 col-md-4 col-lg-3">
+                                    <label class="form-label">149</label>
+                                    <input type="number" class="form-control ability-input" data-ability="149" min="0" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h4>目标能力值</h4>
+                            <div class="form-group">
+                                <label for="target-ability">选择目标能力值:</label>
+                                <select class="form-control" id="target-ability">
+                                    <option value="138">138</option>
+                                    <option value="139">139</option>
+                                    <option value="140">140</option>
+                                    <option value="141">141</option>
+                                    <option value="142">142</option>
+                                    <option value="143">143</option>
+                                    <option value="144">144</option>
+                                    <option value="145">145</option>
+                                    <option value="146">146</option>
+                                    <option value="147">147</option>
+                                    <option value="148">148</option>
+                                    <option value="149">149</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="calculate()">计算</button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">重置</button>
+                </form>
+                
+                <!-- 结果显示区域 -->
+                <div class="result-container">
+                    <h4>计算结果</h4>
+                    <div id="result"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <footer>
+            <p>&copy; 2024 2025新球场公会. All rights reserved.</p>
+        </footer>
+    </div>
+    
+    <!-- Bootstrap Bundle with Popper -->
+    <!-- 使用本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript -->
+    <script>
+        // 能力值兑换关系映射
+        const exchangeMap = {
+            139: { from: 138, ratio: 4 },
+            140: { from: 139, ratio: 8 },
+            141: { from: 140, ratio: 4 },
+            142: { from: 141, ratio: 8 },
+            143: { from: 142, ratio: 3 },
+            144: { from: 143, ratio: 2 },
+            145: { from: 144, ratio: 2 },
+            146: { from: 145, ratio: 3 },
+            147: { from: 146, ratio: 3 },
+            148: { from: 147, ratio: 3 },
+            149: { from: 148, ratio: 3 }
+        };
+        
+        // 重置表单
+        function resetForm() {
+            // 重置所有能力值输入框
+            const abilityInputs = document.getElementsByClassName('ability-input');
+            for (let i = 0; i < abilityInputs.length; i++) {
+                abilityInputs[i].value = 0;
+            }
+            // 清空结果
+            document.getElementById('result').innerHTML = '';
+        }
+        
+        // 计算能力值转换
+        function calculate() {
+            const targetAbility = parseInt(document.getElementById('target-ability').value);
+            const abilityInputs = document.getElementsByClassName('ability-input');
+            
+            let totalResult = 0;
+            let inputDetails = [];
+            
+            // 遍历所有能力值输入框
+            for (let i = 0; i < abilityInputs.length; i++) {
+                const input = abilityInputs[i];
+                const inputAbility = parseInt(input.dataset.ability);
+                const inputCount = parseInt(input.value);
+                
+                // 跳过值为0的输入
+                if (inputCount === 0) {
+                    continue;
+                }
+                
+                // 检查输入
+                if (isNaN(inputCount) || inputCount < 0) {
+                    alert('请输入有效的球员个数');
+                    return;
+                }
+                
+                let rowResult;
+                
+                if (inputAbility === targetAbility) {
+                    rowResult = inputCount;
+                } else if (inputAbility < targetAbility) {
+                    // 从低能力值转换到高能力值
+                    rowResult = convertToHigher(inputAbility, inputCount, targetAbility);
+                } else {
+                    // 从高能力值转换到低能力值
+                    rowResult = convertToLower(inputAbility, inputCount, targetAbility);
+                }
+                
+                // 累加结果
+                totalResult += parseFloat(rowResult);
+                
+                // 保存输入详情
+                inputDetails.push({
+                    ability: inputAbility,
+                    count: inputCount,
+                    result: rowResult
+                });
+            }
+            
+            // 显示结果
+            const resultDiv = document.getElementById('result');
+            
+            // 如果没有输入任何球员个数，显示提示
+            if (inputDetails.length === 0) {
+                resultDiv.innerHTML = '<div class="alert alert-info">请输入至少一个球员个数</div>';
+                return;
+            }
+            
+            let resultHtml = `
+                <div class="alert alert-success">
+                    <strong>计算结果:</strong><br>
+                    <br>
+                    <strong>输入详情:</strong><br>
+            `;
+            
+            // 添加每个输入行的计算详情
+            for (const detail of inputDetails) {
+                resultHtml += `${detail.count}个能力值为${detail.ability}的球员 = ${detail.result}个能力值为${targetAbility}的球员<br>`;
+            }
+            
+            // 添加总和
+            resultHtml += `
+                <br>
+                <strong>总结果:</strong><br>
+                总计 = ${totalResult.toFixed(4)}个能力值为${targetAbility}的球员
+                </div>
+            `;
+            
+            resultDiv.innerHTML = resultHtml;
+        }
+        
+        // 从低能力值转换到高能力值
+        function convertToHigher(fromAbility, count, toAbility) {
+            let currentCount = count;
+            for (let i = fromAbility + 1; i <= toAbility; i++) {
+                if (exchangeMap[i]) {
+                    currentCount = currentCount / exchangeMap[i].ratio;
+                }
+            }
+            return currentCount.toFixed(4);
+        }
+        
+        // 从高能力值转换到低能力值
+        function convertToLower(fromAbility, count, toAbility) {
+            let currentCount = count;
+            for (let i = fromAbility; i > toAbility; i--) {
+                if (exchangeMap[i]) {
+                    currentCount = currentCount * exchangeMap[i].ratio;
+                }
+            }
+            return currentCount;
+        }
+    </script>
+</body>
+</html>

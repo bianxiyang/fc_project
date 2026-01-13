@@ -1,0 +1,513 @@
+/* 全局响应式样式 - 适配iPhone 14等移动设备 */
+
+/* 基础样式调整 */
+body {
+    padding: 0.5rem;
+    font-size: 14px;
+}
+
+/* 容器适配 */
+.container {
+    padding-left: 10px;
+    padding-right: 10px;
+    max-width: 100%;
+}
+
+/* 缩小所有页面的蓝色header区域，突出核心内容 */
+.header {
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 1rem !important;
+}
+
+.header h1 {
+    margin-bottom: 0.25rem !important;
+    font-size: 1.25rem !important;
+}
+
+.header p {
+    margin-bottom: 0 !important;
+    font-size: 0.9rem !important;
+    line-height: 1.2 !important;
+}
+
+/* 导航菜单适配 */
+.navbar {
+    padding: 0.5rem 1rem;
+}
+
+/* 缩小折叠菜单按钮大小 */
+.navbar-toggler {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
+    border-radius: 0.25rem !important;
+    height: 32px !important;
+    width: 40px !important;
+}
+
+.navbar-toggler-icon {
+    width: 1.25em !important;
+    height: 1.25em !important;
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+}
+
+.navbar-nav {
+    margin-top: 0.5rem;
+}
+
+.nav-item {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* 标题适配 */
+h1 {
+    font-size: 1.5rem;
+}
+
+h2 {
+    font-size: 1.25rem;
+}
+
+h3 {
+    font-size: 1.1rem;
+}
+
+/* 卡片适配 */
+.card {
+    margin-bottom: 1rem;
+}
+
+.card-header {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* 按钮适配 */
+.btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+}
+
+/* 表单适配 */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+.form-check {
+    margin-bottom: 0.75rem;
+}
+
+.form-check-inline {
+    margin-right: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+/* 表格适配 */
+table {
+    font-size: 0.8rem;
+    width: 100%;
+    min-width: 400px; /* 确保表格有足够的宽度 */
+}
+
+th, td {
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
+    font-size: 0.8rem;
+}
+
+/* 响应式表格 - 允许水平滚动 */
+.table-responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f1f1f1;
+    margin-bottom: 1rem;
+}
+
+/* 积分榜表格特殊适配 */
+.rank-table-container {
+    padding: 1rem;
+}
+
+/* 在小屏幕上进一步优化表格显示 */
+@media (max-width: 576px) {
+    /* 减小表格单元格内边距 - 进一步缩小 */
+    th, td {
+        padding: 0.15rem 0.1rem !important;
+        font-size: 0.65rem !important;
+        border: none !important;
+        white-space: nowrap;
+    }
+    
+    /* 减小排名和积分字体大小 - 进一步缩小 */
+    .rank-number {
+        font-size: 0.8rem !important;
+    }
+    
+    .points, .goals, .goals-conceded {
+        font-size: 0.8rem !important;
+    }
+    
+    /* 减小表格列宽 - 进一步缩小 */
+    .table {
+        border-spacing: 0 !important;
+        border-collapse: collapse !important;
+        width: 100% !important;
+        min-width: 300px !important;
+    }
+    
+    /* 优化表格容器 - 移除所有内边距 */
+    .table-responsive {
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+    }
+    
+    /* 进一步缩小积分榜列宽 */
+    .table th:nth-child(1), .table td:nth-child(1) { 
+        width: 35px !important; 
+        padding-left: 0.1rem !important;
+        padding-right: 0.1rem !important;
+    } /* 排名 */
+    .table th:nth-child(2), .table td:nth-child(2) { 
+        width: 70px !important; 
+        padding-left: 0.1rem !important;
+        padding-right: 0.1rem !important;
+    } /* 名称 */
+    .table th:nth-child(3), .table td:nth-child(3) { 
+        width: 25px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 赛 */
+    .table th:nth-child(4), .table td:nth-child(4) { 
+        width: 25px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 胜 */
+    .table th:nth-child(5), .table td:nth-child(5) { 
+        width: 25px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 平 */
+    .table th:nth-child(6), .table td:nth-child(6) { 
+        width: 25px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 负 */
+    .table th:nth-child(7), .table td:nth-child(7) { 
+        width: 35px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 积分 */
+    
+    /* 射手榜额外列优化 - 进一步缩小 */
+    .table th:nth-child(8), .table td:nth-child(8) { 
+        width: 45px !important; 
+        padding: 0.15rem 0.1rem !important;
+    } /* 进球率/失球率 */
+    
+    /* 隐藏不必要的边框 */
+    .table thead th {
+        border-bottom: 1px solid #dee2e6 !important;
+        font-size: 0.6rem !important;
+        font-weight: 600 !important;
+        padding: 0.15rem 0.1rem !important;
+        text-align: center !important;
+    }
+    
+    .table tbody tr {
+        border-bottom: 1px solid #f0f0f0 !important;
+    }
+    
+    /* 移除表格边框 */
+    .table, .table thead, .table tbody, .table th, .table td, .table tr {
+        border: none !important;
+    }
+    
+    /* 优化表格容器的父元素 */
+    .rank-table-container, .striker-table-container {
+        padding: 0.25rem !important;
+        margin: 0 !important;
+    }
+}
+
+/* 选择器适配 */
+.select2-container {
+    width: 100% !important;
+}
+
+.select2-selection {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+/* 结果容器适配 */
+.result-container {
+    padding: 1rem;
+}
+
+/* 匹配项适配 */
+.match-item {
+    padding: 0.75rem;
+}
+
+/* 移动端隐藏元素 */
+@media (max-width: 768px) {
+    /* 隐藏大屏导航项 */
+    .nav-item.d-none.d-md-block {
+        display: none !important;
+    }
+    
+    /* 调整标题大小 */
+    h1 {
+        font-size: 1.3rem;
+    }
+    
+    h2 {
+        font-size: 1.1rem;
+    }
+    
+    /* 调整卡片间距 */
+    .card {
+        margin-bottom: 0.75rem;
+    }
+    
+    /* 调整按钮大小 */
+    .btn {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+    
+    /* 调整表单元素 */
+    .form-control {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.85rem;
+    }
+    
+    /* 调整复选框间距 */
+    .user-checkbox {
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* 调整赛程类型选择 */
+    .schedule-type {
+        margin-right: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* 调整API信息展示 */
+    .api-info {
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .api-item {
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
+    }
+}
+
+/* iPhone 14 特定适配 (390px × 844px) */
+@media (max-width: 393px) {
+    /* 进一步调整标题大小 */
+    h1 {
+        font-size: 1.2rem;
+    }
+    
+    h2 {
+        font-size: 1rem;
+    }
+    
+    /* 进一步调整导航菜单 */
+    .navbar {
+        padding: 0.4rem 0.8rem;
+    }
+    
+    .nav-link {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+    }
+    
+    /* 进一步调整按钮 */
+    .btn {
+        padding: 0.35rem 0.7rem;
+        font-size: 0.8rem;
+    }
+    
+    /* 进一步调整表单 */
+    .form-control {
+        padding: 0.35rem 0.5rem;
+        font-size: 0.8rem;
+    }
+    
+    /* 调整卡片内边距 */
+    .card-body {
+        padding: 0.8rem;
+    }
+    
+    /* 调整用户选择区域 */
+    #user-selection {
+        gap: 0.5rem;
+    }
+    
+    /* 调整赛程类型选择 */
+    .schedule-type {
+        margin-right: 0.75rem;
+    }
+    
+    /* 调整结果显示 */
+    .result-container {
+        padding: 0.8rem;
+    }
+    
+    /* 调整API信息 */
+    .api-info h2 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* 横屏适配 */
+@media (max-height: 414px) and (orientation: landscape) {
+    body {
+        padding: 0.25rem;
+    }
+    
+    .container {
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+    
+    .card {
+        margin-bottom: 0.5rem;
+    }
+    
+    .card-body {
+        padding: 0.75rem;
+    }
+}
+
+/* 确保所有表格在移动端可滚动 */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #007bff #f1f1f1;
+}
+
+/* 优化滚动条样式 */
+::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0056b3;
+}
+
+/* 加载动画适配 */
+.loading-spinner {
+    width: 30px;
+    height: 30px;
+}
+
+/* 错误信息适配 */
+.alert {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* 页脚适配 */
+footer {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    font-size: 0.8rem;
+}
+
+/* 比赛录入页面适配 */
+.match-form {
+    margin-bottom: 1rem;
+}
+
+.match-actions {
+    margin-top: 1rem;
+}
+
+/* 排行榜页面适配 */
+.rank-table th, .rank-table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+/* 射手榜页面适配 */
+.striker-table th, .striker-table td {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+}
+
+/* 淘汰赛赛程图适配 */
+.tournament-bracket {
+    overflow-x: auto;
+}
+
+/* 能力值计算器适配 */
+.ability-inputs {
+    margin-bottom: 1rem;
+}
+
+.ability-result {
+    margin-top: 1rem;
+}
+
+/* 确保所有模态框适配移动端 */
+.modal-dialog {
+    margin: 0.5rem;
+    max-width: 100%;
+}
+
+.modal-content {
+    border-radius: 8px;
+}
+
+.modal-header {
+    padding: 0.75rem 1rem;
+}
+
+.modal-body {
+    padding: 1rem;
+}
+
+.modal-footer {
+    padding: 0.75rem 1rem;
+}

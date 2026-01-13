@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淘汰赛管理 - 2025新球场公会</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .tournament-item {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tournament-item:last-child {
+            border-bottom: none;
+        }
+        .tournament-info h5 {
+            margin-bottom: 0.25rem;
+        }
+        .tournament-info p {
+            margin-bottom: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .tournament-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+            width: 40px;
+            height: 40px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .nav-item {
+            margin-right: 10px;
+        }
+        .nav-link {
+            color: #007bff;
+        }
+        .nav-link:hover {
+            color: #0056b3;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        
+        /* 响应式设计 - 适配手机端 */
+        @media (max-width: 768px) {
+            /* 调整淘汰赛项布局为垂直排列 */
+            .tournament-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            /* 调整按钮容器为垂直排列或自适应宽度 */
+            .tournament-actions {
+                flex-wrap: wrap;
+                gap: 8px;
+                width: 100%;
+            }
+            
+            /* 调整按钮大小和宽度，确保在手机端不扭曲 */
+            .tournament-actions .btn {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.8rem;
+                flex: 1;
+                min-width: 80px;
+                text-align: center;
+            }
+            
+            /* 调整卡片内边距 */
+            .card.p-5 {
+                padding: 1rem !important;
+            }
+            
+            /* 调整页面标题 */
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            /* 调整淘汰赛信息字体大小 */
+            .tournament-info h5 {
+                font-size: 1.1rem;
+            }
+            
+            .tournament-info p {
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            /* 进一步调整按钮大小 */
+            .tournament-actions .btn {
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+                min-width: 70px;
+            }
+            
+            /* 进一步调整内边距 */
+            body {
+                padding: 0.5rem;
+            }
+            
+            .header {
+                padding: 1rem 0.5rem;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 只有管理员能看到的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/fc-user">用户管理</a>
+                        </li>
+                        <!-- 超级管理员可以访问的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link active" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/tournament-tree">淘汰赛树状图</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/permission-config">权限配置</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link" href="/tournament-score">淘汰赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-trophy"></i> 淘汰赛管理</h1>
+        </div>
+        
+        <div class="card p-5">
+            <!-- 淘汰赛列表 -->
+            <div class="form-group mb-5">
+                <h5><i class="fas fa-list"></i> 所有淘汰赛</h5>
+                <div id="tournament-list" class="mt-3">
+                    <div class="loading-message">加载淘汰赛列表中...</div>
+                </div>
+            </div>
+            
+            <!-- 结果显示区域 -->
+            <div id="tournament-details" class="result-container mt-5 p-4 bg-light rounded" style="display: none;">
+                <h5><i class="fas fa-info-circle"></i> 淘汰赛详情</h5>
+                <div id="details-content"></div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 新球场公会. All rights reserved.</p>
+    </footer>
+
+    <!-- 引入本地jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 加载所有淘汰赛
+            loadAllTournaments();
+        });
+        
+        // 加载所有淘汰赛
+        function loadAllTournaments() {
+            $.ajax({
+                url: '/api/tournaments',
+                type: 'GET',
+                success: function(response) {
+                    // 修改响应检查逻辑，适配后端返回的数据格式
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const tournamentListDiv = $('#tournament-list');
+                        // 移除加载消息
+                        tournamentListDiv.find('.loading-message').remove();
+                        
+                        if (response.data.length === 0) {
+                            tournamentListDiv.append('<div class="alert alert-info text-center">暂无淘汰赛数据</div>');
+                            return;
+                        }
+                        
+                        response.data.forEach(tournament => {
+                            // 生成状态标签
+                            let statusBadge = '';
+                            if (tournament.status === 0) {
+                                statusBadge = '<span class="badge bg-secondary status-badge">未开始</span>';
+                            } else if (tournament.status === 1) {
+                                statusBadge = '<span class="badge bg-primary status-badge">进行中</span>';
+                            } else if (tournament.status === 2) {
+                                statusBadge = '<span class="badge bg-success status-badge">已结束</span>';
+                            }
+                            
+                            const tournamentItem = $('<div class="tournament-item border rounded p-3 mb-3">')
+                                .append($('<div class="tournament-info">')
+                                    .append('<h5>' + tournament.name + ' ' + statusBadge + '</h5>')
+                                    .append('<p>创建时间: ' + formatDateTime(tournament.createdAt) + ' | 参与者数量: ' + tournament.participantCount + '</p>')
+                                )
+                                .append($('<div class="tournament-actions">')
+                                        .append($('<button class="btn btn-sm btn-success">')
+                                            .text('赛事一览')
+                                            .click(function() {
+                                                window.location.href = '/tournament-bracket?id=' + tournament.id;
+                                            })
+                                        )
+                                        .append($('<button class="btn btn-sm btn-info">')
+                                            .text('树状图')
+                                            .click(function() {
+                                                window.location.href = '/tournament-tree?id=' + tournament.id;
+                                            })
+                                        )
+                                        .append($('<button class="btn btn-sm btn-warning">')
+                                            .text('查看所有比赛')
+                                            .click(function() {
+                                                viewTournamentMatches(tournament.id);
+                                            })
+                                        )
+                                );
+                            tournamentListDiv.append(tournamentItem);
+                        });
+                    } else {
+                        // 如果请求成功但数据无效，显示错误
+                        $('#tournament-list').html('<div class="alert alert-danger text-center">加载淘汰赛列表失败: ' + (response.message || '数据格式错误') + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // 显示更详细的错误信息
+                    console.error('加载淘汰赛列表失败:', error);
+                    $('#tournament-list').html('<div class="alert alert-danger text-center">加载淘汰赛列表失败，请检查网络连接或稍后重试</div>');
+                }
+            });
+        }
+        
+        // 加载淘汰赛详情
+        function loadTournamentDetails(tournamentId) {
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId,
+                type: 'GET',
+                success: function(response) {
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const detailsContent = $('#details-content');
+                        const tournament = response.data;
+                        
+                        detailsContent.html(`
+                            <div class="p-3 bg-white rounded border">
+                                <h6><strong>淘汰赛名称:</strong> ${tournament.name}</h6>
+                                <p><strong>状态:</strong> ${getStatusText(tournament.status)}</p>
+                                <p><strong>参与者数量:</strong> ${tournament.participantCount}</p>
+                                <p><strong>创建时间:</strong> ${formatDateTime(tournament.createdAt)}</p>
+                                <p><strong>更新时间:</strong> ${formatDateTime(tournament.updatedAt)}</p>
+                            </div>
+                        `);
+                        
+                        $('#tournament-details').show();
+                        $('#tournament-details')[0].scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        alert('获取淘汰赛详情失败: ' + (response.message || '未知错误'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取淘汰赛详情失败:', error);
+                    alert('获取淘汰赛详情失败，请重试');
+                }
+            });
+        }
+        
+        // 查看比赛全貌
+        function viewTournamentBracket(tournamentId) {
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId + '/bracket',
+                type: 'GET',
+                success: function(response) {
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const bracketData = response.data;
+                        let bracketHtml = '<h6 class="mt-3 mb-2">比赛全貌:</h6><pre class="bg-dark text-light p-3 rounded overflow-auto">' + JSON.stringify(bracketData, null, 2) + '</pre>';
+                        
+                        $('#details-content').append(bracketHtml);
+                        $('#tournament-details').show();
+                    } else {
+                        alert('获取比赛全貌失败: ' + (response.message || '未知错误'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取比赛全貌失败:', error);
+                    alert('获取比赛全貌失败，请重试');
+                }
+            });
+        }
+        
+        // 查看所有比赛
+        function viewTournamentMatches(tournamentId) {
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId + '/matches',
+                type: 'GET',
+                success: function(response) {
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const matches = response.data;
+                        let matchesHtml = '<h6 class="mt-3 mb-2">所有比赛:</h6><table class="table table-sm mt-2">';
+                        matchesHtml += '<thead class="bg-primary text-white"><tr><th>轮次</th><th>比赛编号</th><th>局数</th><th>主队</th><th>客队</th><th>比分</th><th>状态</th></tr></thead><tbody>';
+                        
+                        // 按照轮次、比赛编号和局数排序
+                        matches.sort(function(a, b) {
+                            // 先按轮次排序
+                            if (a.round !== b.round) {
+                                return a.round - b.round;
+                            }
+                            // 再按比赛编号排序
+                            if (a.matchNumber !== b.matchNumber) {
+                                return a.matchNumber - b.matchNumber;
+                            }
+                            // 最后按局数排序
+                            return a.gameNumber - b.gameNumber;
+                        });
+                        
+                        matches.forEach(match => {
+                            const homeTeamName = match.homeTeam ? match.homeTeam.name : '轮空';
+                            const awayTeamName = match.awayTeam ? match.awayTeam.name : '轮空';
+                            const score = match.homeScore !== null ? `${match.homeScore} : ${match.awayScore}` : '-';
+                            const statusText = match.status === 0 ? '未开始' : match.status === 1 ? '进行中' : '已结束';
+                            
+                            matchesHtml += `<tr>
+                                <td>${match.round}</td>
+                                <td>${match.matchNumber}</td>
+                                <td>${match.gameNumber}</td>
+                                <td>${homeTeamName}</td>
+                                <td>${awayTeamName}</td>
+                                <td>${score}</td>
+                                <td>${statusText}</td>
+                            </tr>`;
+                        });
+                        
+                        matchesHtml += '</tbody></table>';
+                        
+                        $('#details-content').append(matchesHtml);
+                        $('#tournament-details').show();
+                    } else {
+                        alert('获取比赛列表失败: ' + (response.message || '未知错误'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('获取比赛列表失败:', error);
+                    alert('获取比赛列表失败，请重试');
+                }
+            });
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '';
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            if (status === 0) return '未开始';
+            if (status === 1) return '进行中';
+            if (status === 2) return '已结束';
+            return '未知状态';
+        }
+    </script>
+</body>
+</html>

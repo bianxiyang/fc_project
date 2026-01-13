@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权限配置 - 2025新球场公会</title>
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .permission-group {
+            margin-bottom: 1.5rem;
+        }
+        .permission-group h5 {
+            background-color: #e9ecef;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0;
+            border-radius: 4px 4px 0 0;
+            font-weight: bold;
+        }
+        .permission-list {
+            background-color: white;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            padding: 1rem;
+        }
+        .permission-item {
+            margin-bottom: 0.5rem;
+        }
+        .permission-item label {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+        .save-btn {
+            margin-top: 1.5rem;
+        }
+        .message {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> 权限配置</h1>
+            <p>为用户配置可访问的功能模块</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-cog"></i> 权限管理
+            </div>
+            <div class="card-body">
+                <!-- 消息显示区域 -->
+                <div id="message" class="message"></div>
+
+                <!-- 用户选择 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="userSelect" class="form-label">选择用户：</label>
+                        <select id="userSelect" class="form-select">
+                            <option value="">请选择用户</option>
+                            <option th:each="user : ${users}" th:value="${user.id}" th:text="|${user.name} (${user.username}) - ${user.role}|"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 权限列表 -->
+                <div id="permissions-container" class="mt-4">
+                    <div class="text-center text-muted">
+                        <i class="fas fa-info-circle"></i> 请先选择一个用户
+                    </div>
+                </div>
+
+                <!-- 保存按钮 -->
+                <div class="text-center save-btn">
+                    <button id="saveBtn" class="btn btn-primary btn-lg" disabled>
+                        <i class="fas fa-save"></i> 保存权限配置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="/js/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            let selectedUserId = null;
+            let originalPermissions = [];
+
+            // 显示消息
+            function showMessage(message, type = 'info') {
+                const messageDiv = $('#message');
+                messageDiv.html(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>`);
+            }
+
+            // 隐藏消息
+            function hideMessage() {
+                $('#message').empty();
+            }
+
+            // 加载权限列表
+            function loadPermissions(userId) {
+                if (!userId) {
+                    return;
+                }
+
+                $.ajax({
+                    url: `/api/permissions`,
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    timeout: 5000,
+                    success: function(response) {
+                        // 处理Spring Boot ResponseEntity格式的响应
+                        const permissions = Array.isArray(response) ? response : (response.body || []);
+                        renderPermissions(permissions, userId);
+                    },
+                    error: function(xhr, status, error) {
+                        showMessage('加载权限列表失败，请重试', 'danger');
+                    }
+                });
+            }
+
+            // 加载用户已有的权限
+            function loadUserPermissions(userId) {
+                $.ajax({
+                    url: `/api/permissions/user/${userId}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    cache: false,
+                    timeout: 5000,
+                    success: function(response) {
+                        // 处理Spring Boot ResponseEntity格式的响应
+                        const userPermissions = Array.isArray(response) ? response : (response.body || []);
+                        // 保存原始权限，用于比较是否有变化
+                        originalPermissions = userPermissions.map(perm => perm.id);
+                        // 勾选用户已有的权限
+                        userPermissions.forEach(perm => {
+                            $(`#permission-${perm.id}`).prop('checked', true);
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        showMessage('加载用户权限失败，请重试', 'danger');
+                    }
+                });
+            }
+
+            // 渲染权限列表
+            function renderPermissions(permissions, userId) {
+                const container = $('#permissions-container');
+                
+                // 按父ID分组权限
+                const permissionMap = new Map();
+                permissions.forEach(perm => {
+                    const parentId = perm.parentId || 0;
+                    if (!permissionMap.has(parentId)) {
+                        permissionMap.set(parentId, []);
+                    }
+                    permissionMap.get(parentId).push(perm);
+                });
+
+                // 构建HTML
+                let html = '';
+                const rootPermissions = permissionMap.get(0) || [];
+                
+                rootPermissions.forEach(rootPerm => {
+                    const childPermissions = permissionMap.get(rootPerm.id) || [];
+                    
+                    html += `<div class="permission-group">
+                        <h5><i class="fas fa-folder"></i> ${rootPerm.name}</h5>
+                        <div class="permission-list">`;
+                    
+                    if (childPermissions.length === 0) {
+                        // 没有子权限，直接显示根权限
+                        html += `<div class="permission-item">
+                            <input type="checkbox" id="permission-${rootPerm.id}" value="${rootPerm.id}">
+                            <label for="permission-${rootPerm.id}">${rootPerm.name}</label>
+                        </div>`;
+                    } else {
+                        // 显示子权限
+                        childPermissions.forEach(childPerm => {
+                            html += `<div class="permission-item">
+                                <input type="checkbox" id="permission-${childPerm.id}" value="${childPerm.id}">
+                                <label for="permission-${childPerm.id}">${childPerm.name}</label>
+                            </div>`;
+                        });
+                    }
+                    
+                    html += `</div></div>`;
+                });
+                
+                container.html(html);
+                
+                // 加载用户已有的权限
+                loadUserPermissions(userId);
+                
+                // 启用保存按钮
+                $('#saveBtn').prop('disabled', false);
+            }
+
+            // 用户选择变化事件
+            $('#userSelect').change(function() {
+                const userId = $(this).val();
+                selectedUserId = userId;
+                
+                if (userId) {
+                    hideMessage();
+                    loadPermissions(userId);
+                } else {
+                    $('#permissions-container').html('<div class="text-center text-muted"><i class="fas fa-info-circle"></i> 请先选择一个用户</div>');
+                    $('#saveBtn').prop('disabled', true);
+                }
+            });
+
+            // 保存权限配置
+            $('#saveBtn').click(function() {
+                if (!selectedUserId) {
+                    showMessage('请先选择一个用户', 'warning');
+                    return;
+                }
+
+                // 获取选中的权限ID
+                const selectedPermissionIds = [];
+                $('input[type="checkbox"]:checked').each(function() {
+                    selectedPermissionIds.push(parseInt($(this).val()));
+                });
+
+                // 比较是否有变化
+                const hasChanges = !arraysEqual(selectedPermissionIds, originalPermissions);
+                if (!hasChanges) {
+                    showMessage('没有权限变化，无需保存', 'info');
+                    return;
+                }
+
+                // 保存权限
+                $.ajax({
+                    url: `/api/permissions/assign/${selectedUserId}`,
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ permissionIds: selectedPermissionIds }),
+                    timeout: 5000,
+                    success: function(response) {
+                        showMessage('权限配置保存成功', 'success');
+                        // 更新原始权限
+                        originalPermissions = [...selectedPermissionIds];
+                    },
+                    error: function(xhr, status, error) {
+                        const errorMsg = xhr.responseText || '保存权限失败，请重试';
+                        showMessage(errorMsg, 'danger');
+                    }
+                });
+            });
+
+            // 辅助函数：比较两个数组是否相等
+            function arraysEqual(a, b) {
+                if (a.length !== b.length) return false;
+                const sortedA = [...a].sort();
+                const sortedB = [...b].sort();
+                for (let i = 0; i < sortedA.length; i++) {
+                    if (sortedA[i] !== sortedB[i]) return false;
+                }
+                return true;
+            }
+        });
+    </script>
+</body>
+</html>

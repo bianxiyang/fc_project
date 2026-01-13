@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>淘汰赛比分管理 - 2025新球场公会</title>
+    <!-- Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .card-body {
+            padding: 1.25rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0 0 10px 10px;
+        }
+        .score-input {
+            width: 50px;
+            height: 40px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0 0.5rem;
+        }
+        .match-status {
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .status-0 {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-1 {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .status-2 {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn {
+            font-weight: 500;
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-success {
+            background-color: #198754;
+            border-color: #198754;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+        }
+        .match-item {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .match-item:last-child {
+            margin-bottom: 0;
+        }
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .match-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .team-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30%;
+        }
+        .winner-indicator {
+            color: #28a745;
+            font-weight: bold;
+            text-align: center;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .team-score {
+            width: 40%;
+            text-align: center;
+        }
+        .team-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .team-score {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 15px;
+        }
+        .game-number {
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .round-number {
+            background: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+            width: 40px;
+            height: 40px;
+        }
+        .success-message {
+            display: none;
+            margin: 20px 0;
+        }
+        .error-message {
+            display: none;
+            margin: 20px 0;
+        }
+        .series-status {
+            background: #ffc107;
+            color: #212529;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .winner-indicator {
+            color: #28a745;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        /* 调整淘汰赛选择器的响应式布局 */
+        .tournament-selector {
+            margin-bottom: 20px;
+        }
+        
+        /* 针对手机端调整选择淘汰赛区域的布局 */
+        @media (max-width: 768px) {
+            /* 调整整体容器内边距 */
+            body {
+                padding: 0.5rem;
+            }
+            
+            /* 调整导航菜单 */
+            .navbar {
+                margin-bottom: 1rem;
+            }
+            
+            /* 调整页面标题 */
+            .header {
+                padding: 1rem 0.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            /* 调整卡片样式 */
+            .card {
+                margin-bottom: 1rem;
+            }
+            
+            .card-body {
+                padding: 1rem;
+            }
+            
+            /* 调整选择淘汰赛区域 */
+            .tournament-selector .d-flex {
+                flex-direction: column;
+            }
+            
+            .tournament-selector .form-select {
+                width: 100% !important;
+                margin-bottom: 10px;
+                font-size: 0.9rem;
+                padding: 0.5rem;
+            }
+            
+            #viewBracketBtn {
+                width: 100%;
+                font-size: 0.9rem;
+                padding: 0.5rem;
+            }
+            
+            /* 调整比赛项样式 */
+            .match-item {
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+            
+            /* 调整团队信息布局 */
+            .team-info {
+                width: 40%;
+            }
+            
+            .team-name {
+                font-size: 1rem;
+            }
+            
+            /* 调整比分显示 */
+            .team-score {
+                font-size: 1.2rem;
+                margin: 0 5px;
+            }
+            
+            /* 调整按钮大小 */
+            .btn {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.875rem;
+            }
+            
+            /* 调整轮次标题 */
+            h4 {
+                font-size: 1.25rem;
+            }
+            
+            /* 调整系列赛标题 */
+            .series-header {
+                font-size: 0.9rem;
+            }
+            
+            /* 调整比赛状态标签 */
+            .match-status {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 只有管理员能看到的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/fc-user">用户管理</a>
+                        </li>
+                        <!-- 超级管理员可以访问的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/tournament-tree">淘汰赛树状图</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/permission-config">权限配置</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link active" href="/tournament-score">淘汰赛比分</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-trophy"></i> 淘汰赛比分管理</h1>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <!-- 淘汰赛选择器 -->
+                <div class="tournament-selector mb-4">
+                    <label for="tournamentSelect" class="form-label">选择淘汰赛：</label>
+                    <div class="d-flex gap-2">
+                        <select id="tournamentSelect" class="form-select flex-grow-1">
+                            <option value="">加载中...</option>
+                        </select>
+                        <button id="viewBracketBtn" class="btn btn-info" disabled>
+                            <i class="fas fa-sitemap"></i> 赛事一览
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 查询区域 - 已隐藏 -->
+                <div class="query-section mb-4 p-3 bg-light rounded" style="display: none !important;">
+                    <h6 class="mb-3">查询条件</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label for="matchIdInput" class="form-label">比赛ID</label>
+                            <input type="number" id="matchIdInput" class="form-control" placeholder="输入比赛ID">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="participantNameInput" class="form-label">参赛者名称</label>
+                            <input type="text" id="participantNameInput" class="form-control" placeholder="输入参赛者名称">
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button id="searchBtn" class="btn btn-primary me-2 flex-fill">
+                                <i class="fas fa-search"></i> 搜索
+                            </button>
+                            <button id="clearSearchBtn" class="btn btn-secondary flex-fill">
+                                <i class="fas fa-times"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 状态消息 -->
+                <div class="alert alert-success success-message" role="alert">
+                    <i class="fas fa-check-circle"></i> <span id="success-text"></span>
+                </div>
+                <div class="alert alert-danger error-message" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span id="error-text"></span>
+                </div>
+                
+                <!-- 加载动画 -->
+                <div class="loading-spinner text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">加载中...</span>
+                    </div>
+                    <p class="mt-2">加载比赛数据中...</p>
+                </div>
+                
+                <!-- 比赛树状图 - 已隐藏 -->
+                <div id="bracket-container" class="card p-4 mt-4" style="display: none !important;">
+                    <h4><i class="fas fa-sitemap"></i> 比赛树状图</h4>
+                    <div id="react-bracket" style="margin-top: 20px;"></div>
+                </div>
+                
+                <!-- 比赛列表 -->
+                <div id="matches-container">
+                    <div class="text-center mt-5">
+                        <i class="fas fa-info-circle text-muted"></i> 请先选择一个淘汰赛
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="text-center mt-5">
+        <p>&copy; 2025 新球场公会. All rights reserved.</p>
+    <!-- 当前用户信息 -->
+    <div id="currentUserInfo" style="display: none;">
+        <!-- 移除principal.id，使用API获取用户信息 -->
+        <span id="currentUserId"></span>
+        <span id="currentUserRole" sec:authentication="authorities[0].authority"></span>
+    </div>
+    
+    </footer>
+
+    <!-- 引入本地jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <!-- 引入React -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- 引入Babel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
+    <!-- React 组件 -->
+    <script type="text/babel">
+        /*<![CDATA[*/
+        // 比赛树状图组件
+        const TournamentBracket = React.memo(({ bracketData }) => {
+            // 获取所有轮次并排序
+            const rounds = Object.keys(bracketData).map(Number).sort((a, b) => a - b);
+            const totalRounds = rounds.length;
+            
+            // 获取轮次标题
+            const getRoundTitle = (round, totalRounds) => {
+                const actualRound = totalRounds - round + 1;
+                if (actualRound === 1) return '决赛';
+                if (actualRound === 2) return '半决赛';
+                return `${Math.pow(2, actualRound)}进${Math.pow(2, actualRound - 1)}`;
+            };
+            
+            // 计算系列赛结果
+            const calculateSeriesResult = (matchGames) => {
+                let homeWins = 0;
+                let awayWins = 0;
+                let isCompleted = false;
+                let winner = null;
+                let homeScore = '-';
+                let awayScore = '-';
+                
+                // 统计获胜局数
+                matchGames.forEach(game => {
+                    if (game.status === 2) { // 已结束
+                        if (game.matchResult === 0) {
+                            homeWins++;
+                        } else if (game.matchResult === 1) {
+                            awayWins++;
+                        }
+                    }
+                });
+                
+                // 计算系列赛结果
+                if (homeWins >= 2 || awayWins >= 2) {
+                    isCompleted = true;
+                    winner = homeWins > awayWins ? matchGames[0].homeTeam : matchGames[0].awayTeam;
+                }
+                
+                // 显示系列赛总比分
+                if (homeWins > 0 || awayWins > 0) {
+                    homeScore = homeWins;
+                    awayScore = awayWins;
+                }
+                
+                return {
+                    homeWins,
+                    awayWins,
+                    isCompleted,
+                    winner,
+                    homeScore,
+                    awayScore
+                };
+            };
+            
+            return React.createElement(
+                'div',
+                { className: 'bracket-container', style: { overflowX: 'auto', padding: '20px' } },
+                React.createElement(
+                    'div',
+                    { className: 'bracket', style: { display: 'flex', alignItems: 'flex-start', justifyContent: 'flex-start', width: 'max-content' } },
+                    rounds.map((round, roundIndex) => {
+                        const roundData = bracketData[round];
+                        const matchNumbers = Object.keys(roundData).map(Number).sort((a, b) => a - b);
+                        
+                        return React.createElement(
+                            React.Fragment,
+                            { key: round },
+                            React.createElement(
+                                'div',
+                                { className: 'round', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '60px', minWidth: '200px', marginRight: '40px' } },
+                                React.createElement(
+                                    'div',
+                                    { className: 'round-title', style: { textAlign: 'center', fontWeight: 'bold', marginBottom: '20px', color: '#007bff', padding: '10px', background: 'rgba(0, 123, 255, 0.1)', borderRadius: '8px', width: '100%' } },
+                                    getRoundTitle(round, totalRounds)
+                                ),
+                                matchNumbers.map(matchNumber => {
+                                    const matchGames = roundData[matchNumber];
+                                    if (!matchGames || matchGames.length === 0) return null;
+                                    
+                                    const seriesResult = calculateSeriesResult(matchGames);
+                                    const firstMatch = matchGames[0];
+                                    
+                                    // 跳过只有一个真实队伍和一个轮空的比赛
+                                    const hasHomeTeam = !!firstMatch.homeTeam;
+                                    const hasAwayTeam = !!firstMatch.awayTeam;
+                                    const isSingleTeamMatch = (hasHomeTeam && !hasAwayTeam) || (!hasHomeTeam && hasAwayTeam);
+                                    if (isSingleTeamMatch) return null;
+                                    
+                                    return React.createElement(
+                                        'div',
+                                        { key: matchNumber, className: 'match', style: { background: 'white', border: '2px solid #e9ecef', borderRadius: '8px', padding: '15px', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)', transition: 'all 0.3s ease', minWidth: '180px', maxWidth: '200px', textAlign: 'center' } },
+                                        React.createElement(
+                                            'div',
+                                            { className: 'match-team', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '5px 0' } },
+                                            React.createElement(
+                                                'div',
+                                                { className: `team-name ${seriesResult.winner && firstMatch.homeTeam && seriesResult.winner.id === firstMatch.homeTeam.id ? 'winner-team' : ''}`, style: { fontWeight: '600', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' } },
+                                                firstMatch.homeTeam ? firstMatch.homeTeam.name : '轮空'
+                                            ),
+                                            React.createElement(
+                                                'div',
+                                                { className: 'team-score', style: { background: '#007bff', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', minWidth: '30px', textAlign: 'center' } },
+                                                seriesResult.homeScore
+                                            )
+                                        ),
+                                        React.createElement(
+                                            'div',
+                                            { className: 'match-team', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '5px 0' } },
+                                            React.createElement(
+                                                'div',
+                                                { className: `team-name ${seriesResult.winner && firstMatch.awayTeam && seriesResult.winner.id === firstMatch.awayTeam.id ? 'winner-team' : ''}`, style: { fontWeight: '600', color: '#333', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' } },
+                                                firstMatch.awayTeam ? firstMatch.awayTeam.name : '轮空'
+                                            ),
+                                            React.createElement(
+                                                'div',
+                                                { className: 'team-score', style: { background: '#007bff', color: 'white', padding: '4px 10px', borderRadius: '15px', fontSize: '0.9rem', fontWeight: 'bold', minWidth: '30px', textAlign: 'center' } },
+                                                seriesResult.awayScore
+                                            )
+                                        ),
+                                        React.createElement(
+                                            'div',
+                                            { className: 'match-status', style: { marginTop: '5px', fontSize: '0.8rem', color: '#6c757d' } },
+                                            seriesResult.isCompleted ? '已完成' : '进行中'
+                                        )
+                                    );
+                                })
+                            )
+                        );
+                    })
+                )
+            );
+        });
+        /*]]>*/
+    </script>
+    
+    <style>
+        .winner-team {
+            color: #28a745 !important;
+            font-weight: bold !important;
+        }
+        .bracket-container::-webkit-scrollbar {
+            height: 6px;
+        }
+        .bracket-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+        .bracket-container::-webkit-scrollbar-thumb {
+            background: #007bff;
+            border-radius: 3px;
+        }
+        .bracket-container::-webkit-scrollbar-thumb:hover {
+            background: #0056b3;
+        }
+    </style>
+    
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            console.log('页面加载完成，开始执行初始化');
+            
+            // 手动设置下拉菜单的初始状态，确保用户知道正在加载
+            $('#tournamentSelect').html('<option value="">加载中...</option>');
+            
+            // 加载所有淘汰赛
+            setTimeout(function() {
+                console.log('执行loadTournaments函数');
+                loadTournaments();
+            }, 500); // 延迟执行，确保DOM元素已完全加载
+            
+            // 监听淘汰赛选择变化
+            $('#tournamentSelect').change(function() {
+                const tournamentId = $(this).val();
+                console.log('选择了淘汰赛:', tournamentId);
+                if (tournamentId) {
+                    loadTournamentMatches(tournamentId);
+                    // 启用查看赛程图按钮
+                    $('#viewBracketBtn').prop('disabled', false);
+                } else {
+                    $('#matches-container').html('<div class="text-center mt-5"><i class="fas fa-info-circle text-muted"></i> 请先选择一个淘汰赛</div>');
+                    // 禁用查看赛程图按钮
+                    $('#viewBracketBtn').prop('disabled', true);
+                }
+            });
+            
+            // 查看赛程图按钮点击事件
+            $('#viewBracketBtn').click(function() {
+                const tournamentId = $('#tournamentSelect').val();
+                if (tournamentId) {
+                    window.location.href = '/tournament-bracket?id=' + tournamentId;
+                }
+            });
+            
+            // 查询按钮事件
+            $('#searchBtn').click(function() {
+                const tournamentId = $('#tournamentSelect').val();
+                console.log('点击搜索按钮，淘汰赛ID:', tournamentId);
+                if (tournamentId) {
+                    loadTournamentMatches(tournamentId);
+                }
+            });
+            
+            // 清空查询按钮事件
+            $('#clearSearchBtn').click(function() {
+                console.log('点击清空按钮');
+                $('#matchIdInput').val('');
+                $('#participantNameInput').val('');
+                const tournamentId = $('#tournamentSelect').val();
+                if (tournamentId) {
+                    loadTournamentMatches(tournamentId);
+                }
+            });
+            
+            // 回车键查询
+            $('#matchIdInput, #participantNameInput').keypress(function(e) {
+                if (e.which === 13) {
+                    console.log('回车键触发搜索');
+                    $('#searchBtn').click();
+                }
+            });
+        });
+        
+        // 加载所有淘汰赛
+        function loadTournaments() {
+            $.ajax({
+                url: '/api/tournaments',
+                type: 'GET',
+                dataType: 'json', // 指定预期的响应数据类型
+                cache: false, // 防止浏览器缓存请求结果
+                timeout: 5000, // 设置请求超时时间为5秒
+                xhrFields: {
+                    withCredentials: true // 包含凭证信息，支持会话认证
+                },
+                success: function(response, textStatus, xhr) {
+                    // 检查是否是重定向
+                    if (xhr.status === 302) {
+                        $('#tournamentSelect').html('<option value="">加载失败，可能需要重新登录</option>');
+                        return;
+                    }
+                    
+                    if (response && response.success === true && response.data) {
+                        const tournamentSelect = $('#tournamentSelect');
+                        tournamentSelect.empty();
+                        tournamentSelect.append('<option value="">请选择淘汰赛</option>');
+                        
+                        if (Array.isArray(response.data)) {
+                            if (response.data.length === 0) {
+                                $('#tournamentSelect').html('<option value="">没有可选项</option>');
+                                return;
+                            }
+                            
+                            response.data.forEach(tournament => {
+                                tournamentSelect.append(
+                                    `<option value="${tournament.id}">${tournament.name} (${tournament.participantCount}人)</option>`
+                                );
+                            });
+                        } else {
+                            $('#tournamentSelect').html('<option value="">加载失败，数据格式错误</option>');
+                        }
+                    } else {
+                        $('#tournamentSelect').html('<option value="">加载失败，请刷新页面</option>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // 处理不同的错误情况
+                    if (xhr.status === 302) {
+                        $('#tournamentSelect').html('<option value="">加载失败，可能需要重新登录</option>');
+                    } else if (xhr.status === 401 || xhr.status === 403) {
+                        $('#tournamentSelect').html('<option value="">加载失败，权限不足</option>');
+                    } else {
+                        $('#tournamentSelect').html('<option value="">加载失败，请刷新页面</option>');
+                    }
+                }
+            });
+        }
+        
+        // 加载淘汰赛的所有比赛
+        function loadTournamentMatches(tournamentId) {
+            // 显示加载动画
+            $('.loading-spinner').show();
+            $('#matches-container').empty();
+            hideMessages();
+            
+            // 隐藏赛程图
+            $('#bracket-container').hide();
+            
+            // 加载比赛列表
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId + '/matches',
+                type: 'GET',
+                dataType: 'json', // 指定预期的响应数据类型
+                cache: false, // 防止浏览器缓存请求结果
+                timeout: 5000, // 设置请求超时时间为5秒
+                xhrFields: {
+                    withCredentials: true // 包含凭证信息，支持会话认证
+                },
+                success: function(response) {
+                    if (response && response.success === true && response.data) {
+                        const matches = response.data;
+                        renderMatches(matches);
+                        
+                        // 加载赛程图数据
+                        loadBracketData(tournamentId);
+                    } else {
+                        showError('加载比赛数据失败: ' + (response.message || '未知错误'));
+                        $('#matches-container').html('<div class="text-center mt-5"><i class="fas fa-exclamation-circle text-danger"></i> 加载比赛数据失败</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showError('加载比赛数据失败，请重试');
+                    $('#matches-container').html('<div class="text-center mt-5"><i class="fas fa-exclamation-circle text-danger"></i> 加载比赛数据失败</div>');
+                },
+                complete: function() {
+                    $('.loading-spinner').hide();
+                }
+            });
+        }
+        
+        // 加载赛程图数据
+        function loadBracketData(tournamentId) {
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId + '/bracket',
+                type: 'GET',
+                dataType: 'json',
+                cache: false,
+                timeout: 5000,
+                xhrFields: {
+                    withCredentials: true
+                },
+                success: function(response) {
+                    if (response && response.success === true && response.data) {
+                        const bracketData = response.data;
+                        renderBracket(bracketData);
+                    } else {
+                        console.error('加载赛程图数据失败:', response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('加载赛程图数据失败:', error);
+                }
+            });
+        }
+        
+        // 渲染赛程图 - 隐藏实现，不显示赛程图
+        function renderBracket(bracketData) {
+            // 不渲染赛程图，保持隐藏状态
+            // 移除了渲染逻辑，确保赛程图始终不显示
+        }
+        
+        // 渲染比赛列表
+        function renderMatches(matches) {
+            const container = $('#matches-container');
+            container.empty();
+            
+            // 获取当前用户角色
+            const currentUserRole = $('#currentUserRole').text() || '';
+            
+            // 由于无法获取当前用户ID，暂时移除普通用户的比赛筛选
+            // 所有用户都可以看到所有比赛
+            let filteredMatches = matches;
+            
+            // 2. 根据查询条件筛选
+            const matchIdQuery = $('#matchIdInput').val().trim();
+            const participantNameQuery = $('#participantNameInput').val().trim();
+            
+            if (matchIdQuery) {
+                filteredMatches = filteredMatches.filter(match => match.id === parseInt(matchIdQuery));
+            }
+            
+            if (participantNameQuery) {
+                const queryLower = participantNameQuery.toLowerCase();
+                filteredMatches = filteredMatches.filter(match => {
+                    const homeTeamName = match.homeTeam && match.homeTeam.name ? match.homeTeam.name.toLowerCase() : '';
+                    const awayTeamName = match.awayTeam && match.awayTeam.name ? match.awayTeam.name.toLowerCase() : '';
+                    return homeTeamName.includes(queryLower) || awayTeamName.includes(queryLower);
+                });
+            }
+            
+            if (filteredMatches.length === 0) {
+                container.html('<div class="text-center mt-5"><i class="fas fa-info-circle text-muted"></i> 没有找到符合条件的比赛</div>');
+                return;
+            }
+            
+            // 按轮次和比赛编号分组
+            const matchesByRound = {};
+            filteredMatches.forEach(match => {
+                if (!matchesByRound[match.round]) {
+                    matchesByRound[match.round] = {};
+                }
+                if (!matchesByRound[match.round][match.matchNumber]) {
+                    matchesByRound[match.round][match.matchNumber] = [];
+                }
+                matchesByRound[match.round][match.matchNumber].push(match);
+            });
+            
+            // 遍历每个轮次
+            const rounds = Object.keys(matchesByRound).map(Number).sort((a, b) => a - b);
+            const totalRounds = rounds.length;
+            
+            rounds.forEach(round => {
+                const roundMatches = matchesByRound[round];
+                
+                // 添加轮次标题
+                let roundName = '';
+                
+                // 根据轮次和总轮次数确定轮次名称
+                if (round === totalRounds) {
+                    roundName = '决赛';
+                } else if (round === totalRounds - 1) {
+                    roundName = '半决赛';
+                } else {
+                    // 计算当前轮次的队伍数量关系
+                    const currentTeams = Math.pow(2, totalRounds - round + 1);
+                    const nextTeams = Math.pow(2, totalRounds - round);
+                    roundName = currentTeams + '进' + nextTeams;
+                }
+                
+                const roundTitle = $('<h4 class="mt-4 mb-3">')
+                    .text(roundName)
+                    .css('color', '#007bff');
+                container.append(roundTitle);
+                
+                // 遍历该轮次的所有比赛
+                const matchNumbers = Object.keys(roundMatches).map(Number).sort((a, b) => a - b);
+                matchNumbers.forEach(matchNumber => {
+                    const matchGames = roundMatches[matchNumber];
+                    
+                    // 计算系列赛状态
+                    const seriesStatus = calculateSeriesStatus(matchGames);
+                    
+                    // 添加系列赛标题
+                    const seriesHeader = $('<div class="mb-3">')
+                        .append($('<span class="game-number">')
+                            .text('比赛 ' + matchNumber)
+                        )
+                        .append($('<span class="series-status ml-2">')
+                            .text(seriesStatus.text)
+                        );
+                    container.append(seriesHeader);
+                    
+                    // 渲染每场比赛
+                    matchGames.forEach(match => {
+                        const matchDiv = $('<div class="match-item"></div>');
+                        
+                        // 比赛头部信息
+                        const matchHeader = $('<div class="match-header"></div>')
+                            .append($('<div>')
+                                .append($('<span class="round-number">')
+                                    .text('第' + match.gameNumber + '局')
+                                )
+                            )
+                            .append($('<div>')
+                                .append($('<span class="match-status status-' + match.status + '">')
+                                    .text(getStatusText(match.status))
+                                )
+                            );
+                        matchDiv.append(matchHeader);
+                        
+                        // 比赛信息
+                        const matchInfo = $('<div class="match-info"></div>');
+                        
+                        // 已结束的比赛，调整布局将获胜者放在上方
+                        if (match.status === 2) {
+                            // 确定获胜者
+                            let winnerTeam = null;
+                            let loserTeam = null;
+                            let homeTeamName = match.homeTeam ? match.homeTeam.name : '轮空';
+                            let awayTeamName = match.awayTeam ? match.awayTeam.name : '轮空';
+                            
+                            if (match.winner) {
+                                if (match.winner.id === match.homeTeam.id) {
+                                    winnerTeam = match.homeTeam;
+                                    loserTeam = match.awayTeam;
+                                } else {
+                                    winnerTeam = match.awayTeam;
+                                    loserTeam = match.homeTeam;
+                                }
+                            } else {
+                                // 如果没有winner对象，根据比分判断
+                                if (match.homeScore > match.awayScore) {
+                                    winnerTeam = match.homeTeam;
+                                    loserTeam = match.awayTeam;
+                                } else {
+                                    winnerTeam = match.awayTeam;
+                                    loserTeam = match.homeTeam;
+                                }
+                            }
+                            
+                            // 获胜者信息 - 放在比分上方，居中显示
+                            const winnerDiv = $('<div class="mb-2">')
+                                .append($('<span class="winner-indicator">')
+                                    .text('获胜者: ' + winnerTeam.name)
+                                );
+                            matchDiv.append(winnerDiv);
+                            
+                            // 主队信息 - 显示实际主队名称
+                            const homeTeamDiv = $('<div class="team-info"></div>')
+                                .append($('<span class="team-name" style="color: ' + (winnerTeam.id === match.homeTeam.id ? '#28a745; font-weight: bold;' : '') + '"></span>')
+                                    .text(homeTeamName)
+                                );
+                            matchInfo.append(homeTeamDiv);
+                            
+                            // 比分信息 - 居中显示
+                            const scoreDiv = $('<div class="team-score"></div>');
+                            scoreDiv.text(match.homeScore + ' - ' + match.awayScore);
+                            matchInfo.append(scoreDiv);
+                            
+                            // 客队信息 - 显示实际客队名称
+                            const awayTeamDiv = $('<div class="team-info"></div>')
+                                .append($('<span class="team-name" style="color: ' + (winnerTeam.id === match.awayTeam.id ? '#28a745; font-weight: bold;' : '') + '"></span>')
+                                    .text(awayTeamName)
+                                );
+                            matchInfo.append(awayTeamDiv);
+                        } else {
+                            // 未结束的比赛，保持原有布局，居中显示
+                            // 主队信息
+                            const homeTeamDiv = $('<div class="team-info"></div>')
+                                .append($('<span class="team-name"></span>')
+                                    .text(match.homeTeam ? match.homeTeam.name : '轮空')
+                                );
+                            matchInfo.append(homeTeamDiv);
+                            
+                            // 比分信息 - 水平排列，保存按钮单独一行
+                            const scoreDiv = $('<div class="team-score"></div>');
+                            // 水平排列的比分输入框
+                            const scoreInputs = $('<div class="d-flex align-items-center justify-content-center"></div>')
+                                .append($(`<input type="number" min="0" class="score-input mx-1" id="homeScore-${match.id}" value="${match.homeScore || 0}" ${seriesStatus.isCompleted ? 'disabled' : ''}>`))
+                                .append($('<span class="mx-1">-</span>'))
+                                .append($(`<input type="number" min="0" class="score-input mx-1" id="awayScore-${match.id}" value="${match.awayScore || 0}" ${seriesStatus.isCompleted ? 'disabled' : ''}>`));
+                            
+                            // 保存按钮，居中显示
+                            const saveButton = $('<div class="mt-2"></div>')
+                                .append($(`<button class="btn btn-primary btn-sm d-block mx-auto" onclick="saveScore(${match.id})" ${seriesStatus.isCompleted ? 'disabled' : ''}>
+                                    <i class="fas fa-save"></i> 保存
+                                </button>`));
+                            
+                            scoreDiv.append(scoreInputs);
+                            scoreDiv.append(saveButton);
+                            matchInfo.append(scoreDiv);
+                            
+                            // 客队信息
+                            const awayTeamDiv = $('<div class="team-info"></div>')
+                                .append($('<span class="team-name"></span>')
+                                    .text(match.awayTeam ? match.awayTeam.name : '轮空')
+                                );
+                            matchInfo.append(awayTeamDiv);
+                        }
+                        
+                        matchDiv.append(matchInfo);
+                        
+                        container.append(matchDiv);
+                    });
+                });
+            });
+        }
+        
+        // 计算系列赛状态
+        function calculateSeriesStatus(matchGames) {
+            let homeWins = 0;
+            let awayWins = 0;
+            let completedGames = 0;
+            
+            // 统计已结束比赛的胜负情况
+            matchGames.forEach(game => {
+                if (game.status === 2) {
+                    completedGames++;
+                    if (game.matchResult === 0) {
+                        homeWins++;
+                    } else if (game.matchResult === 1) {
+                        awayWins++;
+                    }
+                }
+            });
+            
+            // 判断系列赛状态
+            if (homeWins >= 2 || awayWins >= 2) {
+                return {
+                    isCompleted: true,
+                    text: `已结束 (${homeWins}-${awayWins})`
+                };
+            } else {
+                return {
+                    isCompleted: false,
+                    text: `进行中 (${homeWins}-${awayWins})`
+                };
+            }
+        }
+        
+        // 保存比分
+        function saveScore(matchId) {
+            const homeScore = parseInt($(`#homeScore-${matchId}`).val()) || 0;
+            const awayScore = parseInt($(`#awayScore-${matchId}`).val()) || 0;
+            
+            // 显示加载动画
+            $('.loading-spinner').show();
+            hideMessages();
+            
+            $.ajax({
+                url: `/api/tournaments/matches/${matchId}/score`,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    homeScore: homeScore,
+                    awayScore: awayScore
+                }),
+                success: function(response) {
+                    if (response.code === 200 || response.success === true) {
+                        showSuccess('比分修改已提交审核，等待管理员批准');
+                        // 不重新加载页面，保持输入框的状态
+                        // 禁用该比赛的输入框，防止重复提交
+                        $(`#homeScore-${matchId}`).prop('disabled', true);
+                        $(`#awayScore-${matchId}`).prop('disabled', true);
+                        // 禁用保存按钮
+                        $(`#homeScore-${matchId}`).closest('.match-info').find('button').prop('disabled', true);
+                    } else {
+                        showError('保存失败: ' + (response.message || '未知错误'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    let errorMsg = '保存失败，请重试';
+                    try {
+                        const responseData = JSON.parse(xhr.responseText);
+                        if (responseData.message) {
+                            errorMsg = '保存失败: ' + responseData.message;
+                        }
+                    } catch (e) {
+                        // 解析失败，使用默认错误信息
+                    }
+                    showError(errorMsg);
+                },
+                complete: function() {
+                    $('.loading-spinner').hide();
+                }
+            });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            switch(status) {
+                case 0: return '未开始';
+                case 1: return '进行中';
+                case 2: return '已结束';
+                default: return '未知状态';
+            }
+        }
+        
+        // 显示成功消息
+        function showSuccess(message) {
+            $('#success-text').text(message);
+            $('.success-message').show();
+            setTimeout(function() {
+                $('.success-message').fadeOut();
+            }, 3000);
+        }
+        
+        // 显示错误消息
+        function showError(message) {
+            $('#error-text').text(message);
+            $('.error-message').show();
+            setTimeout(function() {
+                $('.error-message').fadeOut();
+            }, 3000);
+        }
+        
+        // 隐藏所有消息
+        function hideMessages() {
+            $('.success-message').hide();
+            $('.error-message').hide();
+        }
+    </script>
+</body>
+</html>

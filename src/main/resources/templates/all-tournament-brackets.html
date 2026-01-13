@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛事一览 - 2025新球场公会</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .tournament-item {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .tournament-item:last-child {
+            border-bottom: none;
+        }
+        .tournament-info h5 {
+            margin-bottom: 0.25rem;
+        }
+        .tournament-info p {
+            margin-bottom: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .tournament-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 4px 12px;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+            width: 40px;
+            height: 40px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .nav-item {
+            margin-right: 10px;
+        }
+        .nav-link {
+            color: #007bff;
+        }
+        .nav-link:hover {
+            color: #0056b3;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        .bracket-card {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+        .bracket-title {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 只有管理员能看到的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/fc-user">用户管理</a>
+                        </li>
+                        <!-- 超级管理员可以访问的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link active" href="/all-tournament-brackets">赛事一览</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/permission-config">权限配置</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasAnyRole('USER', 'ADMIN', 'ROOT')">
+                            <a class="nav-link" href="/tournament-score">淘汰赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-sitemap"></i> 赛事一览</h1>
+        </div>
+        
+        <div class="card p-5">
+            <!-- 所有淘汰赛赛程图 -->
+            <div class="form-group mb-5">
+                <h5><i class="fas fa-list"></i> 所有淘汰赛</h5>
+                <div id="all-brackets-container" class="mt-3">
+                    <div class="loading-message">加载所有赛程图中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 新球场公会. All rights reserved.</p>
+    </footer>
+
+    <!-- 引入本地jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后执行
+        $(document).ready(function() {
+            // 加载所有淘汰赛赛程图
+            loadAllTournamentBrackets();
+        });
+        
+        // 加载所有淘汰赛赛程图
+        function loadAllTournamentBrackets() {
+            $.ajax({
+                url: '/api/tournaments',
+                type: 'GET',
+                success: function(response) {
+                    // 修改响应检查逻辑，适配后端返回的数据格式
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const container = $('#all-brackets-container');
+                        // 移除加载消息
+                        container.find('.loading-message').remove();
+                        
+                        if (response.data.length === 0) {
+                            container.append('<div class="alert alert-info text-center">暂无淘汰赛数据</div>');
+                            return;
+                        }
+                        
+                        response.data.forEach(tournament => {
+                            // 生成状态标签
+                            let statusBadge = '';
+                            if (tournament.status === 0) {
+                                statusBadge = '<span class="badge bg-secondary status-badge">未开始</span>';
+                            } else if (tournament.status === 1) {
+                                statusBadge = '<span class="badge bg-primary status-badge">进行中</span>';
+                            } else if (tournament.status === 2) {
+                                statusBadge = '<span class="badge bg-success status-badge">已结束</span>';
+                            }
+                            
+                            // 创建赛程图卡片
+                            const bracketCard = $('<div class="card bracket-card">')
+                                .append($('<div class="bracket-title">')
+                                    .append('<h5>' + tournament.name + ' ' + statusBadge + '</h5>')
+                                    .append('<p>创建时间: ' + formatDateTime(tournament.createdAt) + ' | 参与者数量: ' + tournament.participantCount + '</p>')
+                                )
+                                .append($('<div class="bracket-content" data-tournament-id="' + tournament.id + '">')
+                                    .append('<div class="loading-text">加载赛程图中...</div>')
+                                )
+                                .append($('<div class="mt-3 text-right">')
+                                    .append($('<button class="btn btn-sm btn-success">')
+                                        .text('查看完整赛程图')
+                                        .click(function() {
+                                            window.location.href = '/tournament-bracket?id=' + tournament.id;
+                                        })
+                                    )
+                                );
+                            
+                            container.append(bracketCard);
+                            
+                            // 加载该淘汰赛的赛程图数据
+                            loadTournamentBracketPreview(tournament.id);
+                        });
+                    } else {
+                        // 如果请求成功但数据无效，显示错误
+                        $('#all-brackets-container').html('<div class="alert alert-danger text-center">加载所有赛程图失败: ' + (response.message || '数据格式错误') + '</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    // 显示更详细的错误信息
+                    console.error('加载所有赛程图失败:', error);
+                    $('#all-brackets-container').html('<div class="alert alert-danger text-center">加载所有赛程图失败，请检查网络连接或稍后重试</div>');
+                }
+            });
+        }
+        
+        // 加载淘汰赛赛程图预览
+        function loadTournamentBracketPreview(tournamentId) {
+            $.ajax({
+                url: '/api/tournaments/' + tournamentId + '/bracket',
+                type: 'GET',
+                success: function(response) {
+                    if ((response.code === 200 || response.success === true) && response.data) {
+                        const bracketData = response.data;
+                        const container = $('.bracket-content[data-tournament-id="' + tournamentId + '"]');
+                        
+                        // 简单显示赛程图信息
+                        const rounds = Object.keys(bracketData).map(Number).sort((a, b) => a - b);
+                        let bracketHtml = '<div class="alert alert-info">';
+                        bracketHtml += '<strong>轮次数:</strong> ' + rounds.length + '<br>';
+                        
+                        rounds.forEach(round => {
+                            const matchNumbers = Object.keys(bracketData[round]).map(Number);
+                            bracketHtml += `<strong>第${round}轮:</strong> ${matchNumbers.length}场比赛<br>`;
+                        });
+                        
+                        bracketHtml += '</div>';
+                        container.html(bracketHtml);
+                    } else {
+                        const container = $('.bracket-content[data-tournament-id="' + tournamentId + '"]');
+                        container.html('<div class="alert alert-danger">加载赛程图失败</div>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('加载赛程图失败:', error);
+                    const container = $('.bracket-content[data-tournament-id="' + tournamentId + '"]');
+                    container.html('<div class="alert alert-danger">加载赛程图失败</div>');
+                }
+            });
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString) return '';
+            const date = new Date(dateTimeString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // 获取状态文本
+        function getStatusText(status) {
+            if (status === 0) return '未开始';
+            if (status === 1) return '进行中';
+            if (status === 2) return '已结束';
+            return '未知状态';
+        }
+    </script>
+</body>
+</html>

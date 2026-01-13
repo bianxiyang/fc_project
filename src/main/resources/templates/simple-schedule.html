@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易赛程生成器 - 2025新球场公会</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 1rem;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .user-checkbox {
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .schedule-type {
+            margin-right: 20px;
+        }
+        .result-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .match-item {
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .match-item:last-child {
+            border-bottom: none;
+        }
+        .loading-spinner {
+            display: none;
+            margin: 20px auto;
+            width: 40px;
+            height: 40px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .nav-item {
+            margin-right: 10px;
+        }
+        .nav-link {
+            color: #007bff;
+        }
+        .nav-link:hover {
+            color: #0056b3;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 只有管理员能看到的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link active" href="/simple-schedule">简易赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                            <a class="nav-link" href="/fc-user">用户管理</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-calendar-alt"></i> 简易赛程生成器</h1>
+            <p>根据所选用户随机生成比赛赛程的简化版本，支持包含和不包含主客场两种模式</p>
+        </div>
+        
+        <div class="card p-5">
+            <!-- 用户选择区域 -->
+            <div class="form-group">
+                <label class="h5 mb-3">选择参赛用户：</label>
+                <div id="user-selection" class="d-flex flex-wrap">
+                    <!-- 用户复选框将通过JavaScript动态生成 -->
+                    <div class="loading-message">加载用户中...</div>
+                </div>
+            </div>
+            
+            <!-- 赛程类型选择 -->
+            <div class="form-group">
+                <label class="h5 mb-3">选择赛程类型：</label>
+                <div class="form-check schedule-type">
+                    <input class="form-check-input" type="radio" name="type" id="type-with-home-away" value="with" checked>
+                    <label class="form-check-label" for="type-with-home-away">
+                        <i class="fas fa-home"></i> 包含主客场
+                    </label>
+                </div>
+                <div class="form-check schedule-type">
+                    <input class="form-check-input" type="radio" name="type" id="type-without-home-away" value="without">
+                    <label class="form-check-label" for="type-without-home-away">
+                        <i class="fas fa-balance-scale"></i> 不包含主客场
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 生成按钮 -->
+            <div class="text-center">
+                <button id="generate" class="btn btn-primary btn-lg px-5 py-2">
+                    <i class="fas fa-random"></i> 生成赛程
+                </button>
+            </div>
+            
+            <!-- 加载指示器 -->
+            <div class="loading-spinner text-center">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">生成中...</span>
+                </div>
+                <p class="mt-2">正在生成赛程，请稍候...</p>
+            </div>
+        </div>
+        
+        <!-- 结果显示区域 -->
+        <div class="result-container" id="result">
+            <h3 class="text-center mb-4">生成的赛程</h3>
+            <div class="mt-4">
+                <!-- 生成的赛程将在这里显示 -->
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 新球场公会. All rights reserved.</p>
+    </footer>
+    
+    <!-- 引入本地jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // 加载用户
+            $.get('/api/fc-users', function(data) {
+                const users = data.data;
+                const usersDiv = $('#user-selection');
+                usersDiv.empty(); // 清空加载提示
+                
+                users.forEach(user => {
+                    usersDiv.append(
+                        '<div class="form-check form-check-inline user-item">' +
+                        '<input type="checkbox" class="form-check-input user-checkbox" value="' + user.id + '" data-name="' + user.name + '" id="user-' + user.id + '">' +
+                        '<label class="form-check-label" for="user-' + user.id + '">' + user.name + '</label>' +
+                        '</div>'
+                    );
+                });
+            });
+            
+            // 生成赛程
+            $('#generate').click(function() {
+                const selectedUsers = [];
+                $('.user-checkbox:checked').each(function() {
+                    selectedUsers.push(parseInt($(this).val()));
+                });
+                
+                if (selectedUsers.length < 2) {
+                    alert('请至少选择2个用户');
+                    return;
+                }
+                
+                const includeHomeAway = $('input[name="type"]:checked').val() === 'with';
+                
+                // 显示加载指示器，隐藏结果区域
+                $('.loading-spinner').show();
+                $('#result').hide();
+                
+                $.ajax({
+                    url: '/api/matches/generate-schedule',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        userIds: selectedUsers,
+                        includeHomeAway: includeHomeAway
+                    }),
+                    success: function(data) {
+                        // 显示结果区域并设置内容
+                        $('#result').show();
+                        $('#result').text(JSON.stringify(data, null, 2));
+                    },
+                    error: function() {
+                        // 显示结果区域并设置错误信息
+                        $('#result').show();
+                        $('#result').text('生成失败');
+                    },
+                    complete: function() {
+                        $('.loading-spinner').hide();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 2025新球场公会</title>
+    <!-- 引入Bootstrap CSS -->
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .nav-item {
+            margin-right: 10px;
+        }
+        .nav-link {
+            color: #007bff;
+        }
+        .nav-link:hover {
+            color: #0056b3;
+        }
+        .nav-link.active {
+            font-weight: bold;
+            color: #0056b3;
+        }
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding: 1rem;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        .container {
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .btn-action {
+            margin-right: 5px;
+        }
+        .modal-header {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .alert {
+            margin-top: 16px;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f3f5;
+        }
+        /* 响应式调整，防止元素扭曲 */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                -ms-overflow-style: -ms-autohiding-scrollbar;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+        /* 确保按钮和表格操作区域不扭曲 */
+        .btn-group {
+            flex-wrap: wrap;
+        }
+        .btn {
+            white-space: nowrap;
+        }
+        /* 确保表格操作列不会太宽 */
+        .table th:last-child, .table td:last-child {
+            white-space: nowrap;
+            min-width: 120px;
+        }
+        
+        /* 页面头部样式 */
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        
+        /* 操作按钮区域样式优化 */
+        .action-buttons-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .left-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .right-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        /* 小屏幕优化 */
+        @media (max-width: 768px) {
+            .action-buttons-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .left-buttons, .right-buttons {
+                justify-content: center;
+            }
+            
+            .btn {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+        
+        /* 超小屏幕优化 */
+        @media (max-width: 576px) {
+            .left-buttons, .right-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 导航菜单 -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">2025新球场公会</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <!-- 所有登录用户都能看到的页面 -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/rank-table">积分榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/striker-table">射手榜</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/ability-calculator">能力值计算器</a>
+                        </li>
+                        <!-- 只有管理员和超级管理员能看到的页面 -->
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/rank-table">首页</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/match-score">积分赛录入</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link" href="/schedule-generator">赛程生成</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ADMIN') or hasRole('ROOT')">
+                            <a class="nav-link active" href="/fc-user">用户管理</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/audit-page">赛事审批</a>
+                        </li>
+                        <li class="nav-item" sec:authorize="hasRole('ROOT')">
+                            <a class="nav-link" href="/tournament-management">淘汰赛管理</a>
+                        </li>
+                    </ul>
+                    
+                    <!-- 登录信息和退出按钮 -->
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-user mr-1"></i> 
+                                <span sec:authentication="principal.username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link text-danger" href="/logout">
+                                <i class="fas fa-sign-out-alt mr-1"></i> 退出登录
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1><i class="fas fa-users"></i> 用户管理</h1>
+            <p>管理和维护系统用户信息</p>
+        </div>
+        
+        <!-- 用户管理内容 -->
+        <div class="mt-5">
+        
+        <!-- 操作按钮 -->
+        <div class="card p-4 mb-4">
+            <div class="action-buttons-container">
+                <div class="left-buttons">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fas fa-plus-circle"></i> 添加用户
+                    </button>
+                    <button type="button" class="btn btn-secondary" id="btnRefresh">
+                        <i class="fas fa-sync-alt"></i> 刷新列表
+                    </button>
+                </div>
+                <div class="right-buttons">
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-secondary" id="btnSortDefault">
+                            默认排序
+                        </button>
+                        <button type="button" class="btn btn-info" id="btnSortById">
+                            <i class="fas fa-sort-numeric-down"></i> 按ID排序
+                        </button>
+                        <button type="button" class="btn btn-info" id="btnSortByPowerful">
+                            <i class="fas fa-sort-amount-down-alt"></i> 按积分排序
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 消息提示区域 -->
+        <div id="message" class="alert d-none"></div>
+        
+        <!-- 用户列表 -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">用户列表</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>胜场</th>
+                                <th>平场</th>
+                                <th>负场</th>
+                                <th>总场次</th>
+                                <th>积分</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <!-- 动态加载用户数据 -->
+                            <tr>
+                                <td colspan="8" class="text-center">加载中...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加用户模态框 -->
+    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">添加新用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addUserForm">
+                        <div class="form-group">
+                            <label for="userId">用户ID</label>
+                            <input type="number" class="form-control" id="userId" name="id" placeholder="请输入用户ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="userName">用户名</label>
+                            <input type="text" class="form-control" id="userName" name="name" placeholder="请输入用户名" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="userWin">胜场</label>
+                            <input type="number" class="form-control" id="userWin" name="win" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="userTie">平场</label>
+                            <input type="number" class="form-control" id="userTie" name="tie" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="userLose">负场</label>
+                            <input type="number" class="form-control" id="userLose" name="lose" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="userPowerful">积分</label>
+                            <input type="number" class="form-control" id="userPowerful" name="powerful" value="1000">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitAdd">确认添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 编辑用户模态框 -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">编辑用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId" name="id">
+                        <div class="form-group">
+                            <label for="editUserName">用户名</label>
+                            <input type="text" class="form-control" id="editUserName" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserWin">胜场</label>
+                            <input type="number" class="form-control" id="editUserWin" name="win">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserTie">平场</label>
+                            <input type="number" class="form-control" id="editUserTie" name="tie">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserLose">负场</label>
+                            <input type="number" class="form-control" id="editUserLose" name="lose">
+                        </div>
+                        <div class="form-group">
+                            <label for="editUserPowerful">积分</label>
+                            <input type="number" class="form-control" id="editUserPowerful" name="powerful">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="btnSubmitEdit">确认更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 删除确认模态框 -->
+    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteConfirmModalLabel">确认删除</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除用户 <strong id="deleteUserName"></strong> 吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmDelete">确认删除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer>
+        <p>&copy; 2025 新球场公会. All rights reserved.</p>
+    </footer>
+    
+    <!-- 引入Bootstrap JS -->
+    <!-- 使用本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 当前编辑或删除的用户ID
+        let currentUserId = null;
+        // 排序状态：'default', 'byId', 'byPowerful'
+        let sortMode = 'default';
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 加载用户列表
+            loadUsers();
+            
+            // 绑定按钮事件
+            document.getElementById('btnRefresh').addEventListener('click', loadUsers);
+            document.getElementById('btnSortDefault').addEventListener('click', function() { setSortMode('default'); });
+            document.getElementById('btnSortById').addEventListener('click', function() { setSortMode('byId'); });
+            document.getElementById('btnSortByPowerful').addEventListener('click', function() { setSortMode('byPowerful'); });
+            document.getElementById('btnSubmitAdd').addEventListener('click', addUser);
+            document.getElementById('btnSubmitEdit').addEventListener('click', updateUser);
+            document.getElementById('btnConfirmDelete').addEventListener('click', deleteUser);
+        });
+        
+        // 加载用户列表
+        function loadUsers() {
+            let url = '/api/fc-users';
+            
+            if (sortMode === 'byId') {
+                url = '/api/fc-users/sorted-by-id';
+            } else if (sortMode === 'byPowerful') {
+                url = '/api/fc-users/rank';
+            }
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success === true) {
+                        renderUserTable(data.data);
+                    } else {
+                        showMessage('获取用户列表失败: ' + data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading users:', error);
+                    showMessage('加载用户列表时发生错误', 'danger');
+                });
+        }
+        
+        // 设置排序模式
+        function setSortMode(mode) {
+            sortMode = mode;
+            
+            // 更新按钮样式
+            document.getElementById('btnSortDefault').className = mode === 'default' ? 'btn btn-secondary' : 'btn btn-info';
+            document.getElementById('btnSortById').className = mode === 'byId' ? 'btn btn-secondary' : 'btn btn-info';
+            document.getElementById('btnSortByPowerful').className = mode === 'byPowerful' ? 'btn btn-secondary' : 'btn btn-info';
+            
+            loadUsers();
+        }
+        
+        // 渲染用户表格
+        function renderUserTable(users) {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">暂无用户数据</td></tr>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.win || 0}</td>
+                    <td>${user.tie || 0}</td>
+                    <td>${user.lose || 0}</td>
+                    <td>${user.totalMatches || 0}</td>
+                    <td>${user.powerful || 0}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning btn-action" onclick="editUser(${user.id}, '${user.name}', ${user.win || 0}, ${user.tie || 0}, ${user.lose || 0}, ${user.powerful || 0})")">
+                            <i class="bi bi-pencil"></i> 编辑
+                        </button>
+                        <button class="btn btn-sm btn-danger btn-action" onclick="confirmDelete(${user.id}, '${user.name}')">
+                            <i class="bi bi-trash"></i> 删除
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        // 添加用户
+        function addUser() {
+            const form = document.getElementById('addUserForm');
+            const formData = new FormData(form);
+            const userData = {};
+            
+            formData.forEach((value, key) => {
+                if (value !== '') {
+                    userData[key] = key === 'id' || key === 'win' || key === 'tie' || key === 'lose' || key === 'powerful' ? 
+                        Number(value) : value;
+                }
+            });
+            
+            fetch('/api/fc-users', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === true) {
+                    showMessage('用户添加成功', 'success');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('addUserModal'));
+                    modal.hide();
+                    // 清空表单
+                    form.reset();
+                    // 重新加载用户列表
+                    loadUsers();
+                } else {
+                    showMessage('添加用户失败: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding user:', error);
+                showMessage('添加用户时发生错误', 'danger');
+            });
+        }
+        
+        // 编辑用户
+        function editUser(id, name, win, tie, lose, powerful) {
+            currentUserId = id;
+            document.getElementById('editUserId').value = id;
+            document.getElementById('editUserName').value = name;
+            document.getElementById('editUserWin').value = win || 0;
+            document.getElementById('editUserTie').value = tie || 0;
+            document.getElementById('editUserLose').value = lose || 0;
+            document.getElementById('editUserPowerful').value = powerful || 0;
+            
+            // 显示编辑模态框
+            const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editModal.show();
+        }
+        
+        // 更新用户
+        function updateUser() {
+            if (!currentUserId) return;
+            
+            const form = document.getElementById('editUserForm');
+            const formData = new FormData(form);
+            const userData = {};
+            
+            formData.forEach((value, key) => {
+                if (value !== '') {
+                    userData[key] = key === 'id' || key === 'win' || key === 'tie' || key === 'lose' || key === 'powerful' ? 
+                        Number(value) : value;
+                }
+            });
+            
+            fetch(`/api/fc-users/${currentUserId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === true) {
+                    showMessage('用户更新成功', 'success');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+                    modal.hide();
+                    // 重新加载用户列表
+                    loadUsers();
+                } else {
+                    showMessage('更新用户失败: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating user:', error);
+                showMessage('更新用户时发生错误', 'danger');
+            });
+        }
+        
+        // 确认删除
+        function confirmDelete(id, name) {
+            currentUserId = id;
+            document.getElementById('deleteUserName').textContent = name;
+            
+            // 显示确认删除模态框
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            deleteModal.show();
+        }
+        
+        // 删除用户
+        function deleteUser() {
+            if (!currentUserId) return;
+            
+            fetch(`/api/fc-users/${currentUserId}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success === true) {
+                    showMessage('用户删除成功', 'success');
+                    // 关闭模态框
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal'));
+                    modal.hide();
+                    // 重新加载用户列表
+                    loadUsers();
+                } else {
+                    showMessage('删除用户失败: ' + data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting user:', error);
+                showMessage('删除用户时发生错误', 'danger');
+            });
+        }
+        
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = `alert alert-${type}`;
+            messageDiv.classList.remove('d-none');
+            
+            // 3秒后自动隐藏消息
+            setTimeout(() => {
+                messageDiv.classList.add('d-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

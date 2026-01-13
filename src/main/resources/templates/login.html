@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025新球场公会 - 登录</title>
+    <!-- 使用本地Bootstrap CSS -->
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 响应式样式 -->
+    <link href="/css/responsive.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .header h1 {
+            margin-bottom: 0.75rem;
+            font-size: 1.75rem;
+        }
+        .header p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+        .card {
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .login-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .error-message {
+            margin-top: 20px;
+        }
+        .form-icon {
+            position: absolute;
+            top: 35px;
+            left: 15px;
+            color: #6c757d;
+        }
+        .form-control {
+            padding-left: 40px;
+        }
+        .form-group.has-icon {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 页面标题 -->
+        <div class="header">
+            <h1>2025新球场公会</h1>
+            <!-- 移除登录表单描述文本 -->
+        </div>
+        
+        <!-- 登录表单 -->
+        <div class="card">
+            <div class="card-body p-5" style="padding-top: 2rem;">
+                <!-- 错误信息显示 -->
+                <div th:if="${param.error}" class="alert alert-danger error-message">
+                    <i class="fas fa-exclamation-circle"></i> 用户名或密码错误，请重试
+                </div>
+                
+                <!-- 登录表单 -->
+                <form th:action="@{/login}" method="post">
+                    <!-- 用户名输入框 -->
+                    <div class="form-group has-icon">
+                        <label for="username" class="h6">用户名：</label>
+                        <i class="fas fa-user form-icon"></i>
+                        <input type="text" id="username" name="username" class="form-control" placeholder="请输入用户名" required>
+                    </div>
+                    
+                    <!-- 密码输入框 -->
+                    <div class="form-group has-icon">
+                        <label for="password" class="h6">密码：</label>
+                        <i class="fas fa-key form-icon"></i>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required>
+                    </div>
+                    
+                    <!-- 登录按钮 -->
+                    <button type="submit" class="btn btn-primary btn-lg login-btn">
+                        登录
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 引入jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- 引入本地Bootstrap JS -->
+    <script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
