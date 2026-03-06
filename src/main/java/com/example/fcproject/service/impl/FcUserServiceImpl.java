@@ -5,6 +5,7 @@ import com.example.fcproject.model.Match;
 import com.example.fcproject.repository.FcUserRepository;
 import com.example.fcproject.repository.MatchRepository;
 import com.example.fcproject.service.FcUserService;
+import com.example.fcproject.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,9 @@ public class FcUserServiceImpl implements FcUserService {
     
     @Autowired
     private MatchRepository matchRepository;
+    
+    @Autowired
+    private PermissionService permissionService;
     
     @Override
     public List<FcUser> getAllUsers() {
@@ -121,6 +125,11 @@ public class FcUserServiceImpl implements FcUserService {
             return password.equals(user.getPassword());
         }
         return false;
+    }
+    
+    @Override
+    public List<com.example.fcproject.model.Permission> getPermissionsByUserId(Integer userId) {
+        return permissionService.getPermissionsByUserId(userId);
     }
     
     /**

@@ -77,4 +77,11 @@ public interface FcUserService {
      * @return 验证结果
      */
     boolean login(String username, String password);
+    
+    /**
+     * 获取用户的权限列表
+     * @param userId 用户ID
+     * @return 权限列表
+     */
+    List<com.example.fcproject.model.Permission> getPermissionsByUserId(Integer userId);
 }

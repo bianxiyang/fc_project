@@ -105,9 +105,6 @@ public class TournamentController {
             remainingParticipants.add(null); // null表示轮空
         }
 
-        // 计算最大轮次数：log2(参与者数量)，向上取整
-        // 对于8个用户，最大轮次数是3（8→4→2→1）
-        int maxRounds = (int) Math.ceil(Math.log(remainingParticipants.size()) / Math.log(2));
         int round = 1;
         
         // 生成所有轮次的比赛，直到决赛
@@ -131,7 +128,6 @@ public class TournamentController {
      */
     private void generateRoundMatches(Tournament tournament, int round, List<FcUser> participants) {
         int matchNumber = 1;
-        LocalDateTime baseMatchTime = LocalDateTime.now().plusDays(round - 1);
 
         for (int i = 0; i < participants.size(); i += 2) {
             FcUser homeTeam = participants.get(i);

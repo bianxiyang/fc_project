@@ -107,6 +107,28 @@
                     </div>
                 </div>
 
+                <!-- 权限操作工具栏 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="btn-group">
+                            <button id="selectAllBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-check-square"></i> 全选
+                            </button>
+                            <button id="deselectAllBtn" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-square"></i> 取消全选
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <input type="text" id="permissionSearch" class="form-control form-control-sm" placeholder="搜索权限...">
+                            <button id="searchBtn" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 权限列表 -->
                 <div id="permissions-container" class="mt-4">
                     <div class="text-center text-muted">
@@ -161,8 +183,8 @@
                     cache: false,
                     timeout: 5000,
                     success: function(response) {
-                        // 处理Spring Boot ResponseEntity格式的响应
-                        const permissions = Array.isArray(response) ? response : (response.body || []);
+                        // 处理ApiResponse格式的响应
+                        const permissions = response.success && response.data ? response.data : [];
                         renderPermissions(permissions, userId);
                     },
                     error: function(xhr, status, error) {
@@ -180,8 +202,8 @@
                     cache: false,
                     timeout: 5000,
                     success: function(response) {
-                        // 处理Spring Boot ResponseEntity格式的响应
-                        const userPermissions = Array.isArray(response) ? response : (response.body || []);
+                        // 处理ApiResponse格式的响应
+                        const userPermissions = response.success && response.data ? response.data : [];
                         // 保存原始权限，用于比较是否有变化
                         originalPermissions = userPermissions.map(perm => perm.id);
                         // 勾选用户已有的权限
@@ -299,6 +321,36 @@
                         showMessage(errorMsg, 'danger');
                     }
                 });
+            });
+
+            // 全选功能
+            $('#selectAllBtn').click(function() {
+                $('input[type="checkbox"]').prop('checked', true);
+            });
+
+            // 取消全选功能
+            $('#deselectAllBtn').click(function() {
+                $('input[type="checkbox"]').prop('checked', false);
+            });
+
+            // 搜索功能
+            $('#searchBtn').click(function() {
+                const searchText = $('#permissionSearch').val().toLowerCase();
+                $('.permission-item').each(function() {
+                    const permissionText = $(this).text().toLowerCase();
+                    if (permissionText.includes(searchText)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // 输入框回车搜索
+            $('#permissionSearch').keypress(function(e) {
+                if (e.which === 13) {
+                    $('#searchBtn').click();
+                }
             });
 
             // 辅助函数：比较两个数组是否相等

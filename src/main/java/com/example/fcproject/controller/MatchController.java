@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @RestController
 @RequestMapping("/api/matches")
@@ -272,120 +272,7 @@ public class MatchController {
         return matches;
     }
     
-    /**
-     * 生成第一轮比赛配对
-     */
-    private List<List<FcUser>> generateFirstRoundMatches(List<FcUser> users) {
-        List<List<FcUser>> matches = new ArrayList<>();
-        int userCount = users.size();
-        
-        // 创建用户副本并打乱顺序
-        List<FcUser> shuffledUsers = new ArrayList<>(users);
-        Collections.shuffle(shuffledUsers, new Random(System.currentTimeMillis()));
-        
-        // 处理轮空情况
-        if (userCount % 2 != 0) {
-            // 奇数个用户，每个轮次有一个用户轮空
-            for (int i = 0; i < userCount - 1; i += 2) {
-                List<FcUser> pair = new ArrayList<>();
-                pair.add(shuffledUsers.get(i));
-                pair.add(shuffledUsers.get(i + 1));
-                matches.add(pair);
-            }
-            // 最后一个用户在第一轮轮空
-        } else {
-            // 偶数个用户，正常配对
-            for (int i = 0; i < userCount / 2; i++) {
-                List<FcUser> pair = new ArrayList<>();
-                pair.add(shuffledUsers.get(i));
-                pair.add(shuffledUsers.get(userCount - 1 - i));
-                matches.add(pair);
-            }
-        }
-        
-        return matches;
-    }
-    
-    /**
-     * 生成下一轮比赛配对（使用标准的循环赛轮转法）
-     */
-    private List<List<FcUser>> generateNextRoundMatches(List<List<FcUser>> currentRound, List<FcUser> allUsers) {
-        List<List<FcUser>> nextRound = new ArrayList<>();
-        int userCount = allUsers.size();
-        boolean hasBye = userCount % 2 != 0;
-        
-        // 创建用户列表的副本并保持原始顺序
-        List<FcUser> users = new ArrayList<>(allUsers);
-        
-        // 处理奇数用户情况
-        if (hasBye) {
-            // 对于奇数用户，我们需要找到轮空用户
-            // 先收集所有参与当前轮次的用户
-            Set<FcUser> playedUsers = new HashSet<>();
-            for (List<FcUser> match : currentRound) {
-                playedUsers.add(match.get(0));
-                playedUsers.add(match.get(1));
-            }
-            
-            // 找到轮空的用户
-            FcUser byeUser = null;
-            for (FcUser user : allUsers) {
-                if (!playedUsers.contains(user)) {
-                    byeUser = user;
-                    break;
-                }
-            }
-            
-            // 创建一个临时列表，不包含轮空用户
-            List<FcUser> tempUsers = new ArrayList<>();
-            for (FcUser user : users) {
-                if (!user.equals(byeUser)) {
-                    tempUsers.add(user);
-                }
-            }
-            
-            // 应用标准的循环赛轮转算法（偶数用户）
-            // 固定第一个用户，其他用户逆时针轮转
-            FcUser firstUser = tempUsers.get(0);
-            List<FcUser> rotatedTemp = new ArrayList<>();
-            rotatedTemp.add(firstUser); // 固定第一个用户
-            rotatedTemp.add(tempUsers.get(tempUsers.size() - 1)); // 最后一个用户放到第二位
-            // 中间的用户依次后移
-            for (int i = 1; i < tempUsers.size() - 1; i++) {
-                rotatedTemp.add(tempUsers.get(i));
-            }
-            
-            // 为轮转后的列表生成配对（第一个用户与最后一个配对，第二个与倒数第二个配对，以此类推）
-            int n = rotatedTemp.size();
-            for (int i = 0; i < n / 2; i++) {
-                List<FcUser> pair = new ArrayList<>();
-                pair.add(rotatedTemp.get(i));
-                pair.add(rotatedTemp.get(n - 1 - i));
-                nextRound.add(pair);
-            }
-        } else {
-            // 偶数用户，应用标准的循环赛轮转算法
-            // 固定第一个用户，其他用户逆时针轮转
-            FcUser firstUser = users.get(0);
-            List<FcUser> rotatedUsers = new ArrayList<>();
-            rotatedUsers.add(firstUser); // 固定第一个用户
-            rotatedUsers.add(users.get(userCount - 1)); // 最后一个用户放到第二位
-            // 中间的用户依次后移
-            for (int i = 1; i < userCount - 1; i++) {
-                rotatedUsers.add(users.get(i));
-            }
-            
-            // 为轮转后的列表生成配对（第一个用户与最后一个配对，第二个与倒数第二个配对，以此类推）
-            for (int i = 0; i < userCount / 2; i++) {
-                List<FcUser> pair = new ArrayList<>();
-                pair.add(rotatedUsers.get(i));
-                pair.add(rotatedUsers.get(userCount - 1 - i));
-                nextRound.add(pair);
-            }
-        }
-        
-        return nextRound;
-    }
+
     
     // 获取指定轮次的比赛
     @GetMapping("/round/{round}")

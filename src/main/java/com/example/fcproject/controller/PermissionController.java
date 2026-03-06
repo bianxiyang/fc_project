@@ -1,9 +1,10 @@
 package com.example.fcproject.controller;
 
 import com.example.fcproject.model.Permission;
-import com.example.fcproject.model.UserPermission;
+
 import com.example.fcproject.service.PermissionService;
 import com.example.fcproject.service.UserPermissionService;
+import com.example.fcproject.util.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,9 +30,9 @@ public class PermissionController {
      * @return 权限列表
      */
     @GetMapping
-    public ResponseEntity<List<Permission>> getAllPermissions() {
+    public ResponseEntity<ApiResponse> getAllPermissions() {
         List<Permission> permissions = permissionService.getAllPermissions();
-        return new ResponseEntity<>(permissions, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success("获取权限列表成功", permissions));
     }
 
     /**
@@ -39,9 +40,9 @@ public class PermissionController {
      * @return 启用的权限列表
      */
     @GetMapping("/enabled")
-    public ResponseEntity<List<Permission>> getEnabledPermissions() {
+    public ResponseEntity<ApiResponse> getEnabledPermissions() {
         List<Permission> permissions = permissionService.getEnabledPermissions();
-        return new ResponseEntity<>(permissions, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success("获取启用权限列表成功", permissions));
     }
 
     /**
@@ -50,9 +51,9 @@ public class PermissionController {
      * @return 用户权限列表
      */
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Permission>> getPermissionsByUserId(@PathVariable Integer userId) {
+    public ResponseEntity<ApiResponse> getPermissionsByUserId(@PathVariable Integer userId) {
         List<Permission> permissions = permissionService.getPermissionsByUserId(userId);
-        return new ResponseEntity<>(permissions, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success("获取用户权限列表成功", permissions));
     }
 
     /**
@@ -62,19 +63,19 @@ public class PermissionController {
      * @return 成功响应
      */
     @PostMapping("/assign/{userId}")
-    public ResponseEntity<String> assignPermissions(@PathVariable Integer userId, @RequestBody Map<String, List<Long>> request) {
+    public ResponseEntity<ApiResponse> assignPermissions(@PathVariable Integer userId, @RequestBody Map<String, List<Long>> request) {
         try {
             List<Long> permissionIds = request.get("permissionIds");
             if (permissionIds == null || permissionIds.isEmpty()) {
-                return new ResponseEntity<>("权限ID列表不能为空", HttpStatus.BAD_REQUEST);
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.error("权限ID列表不能为空"));
             }
 
             // 获取当前登录用户作为创建者
             String createdBy = getCurrentUsername();
             userPermissionService.assignPermissionsToUser(userId, permissionIds, createdBy);
-            return new ResponseEntity<>("权限分配成功", HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success("权限分配成功"));
         } catch (Exception e) {
-            return new ResponseEntity<>("权限分配失败: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("权限分配失败: " + e.getMessage()));
         }
     }
 
@@ -84,12 +85,12 @@ public class PermissionController {
      * @return 成功响应
      */
     @DeleteMapping("/revoke-all/{userId}")
-    public ResponseEntity<String> revokeAllPermissions(@PathVariable Integer userId) {
+    public ResponseEntity<ApiResponse> revokeAllPermissions(@PathVariable Integer userId) {
         try {
             userPermissionService.revokeAllPermissionsFromUser(userId);
-            return new ResponseEntity<>("权限撤销成功", HttpStatus.OK);
+            return ResponseEntity.ok(ApiResponse.success("权限撤销成功"));
         } catch (Exception e) {
-            return new ResponseEntity<>("权限撤销失败: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.error("权限撤销失败: " + e.getMessage()));
         }
     }
 
@@ -99,9 +100,9 @@ public class PermissionController {
      * @return 菜单树结构
      */
     @GetMapping("/menu-tree/{userId}")
-    public ResponseEntity<List<Permission>> getMenuTree(@PathVariable Integer userId) {
+    public ResponseEntity<ApiResponse> getMenuTree(@PathVariable Integer userId) {
         List<Permission> menuTree = permissionService.buildPermissionMenuTree(userId);
-        return new ResponseEntity<>(menuTree, HttpStatus.OK);
+        return ResponseEntity.ok(ApiResponse.success("获取用户权限菜单树成功", menuTree));
     }
 
     /**

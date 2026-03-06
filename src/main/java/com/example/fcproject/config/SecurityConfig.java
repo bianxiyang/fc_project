@@ -6,15 +6,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.http.HttpMethod;
 
@@ -27,7 +26,7 @@ import java.util.List;
  */
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     @Autowired
     private FcUserService fcUserService;
@@ -58,9 +57,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 添加角色作为权限
             authorities.add("ROLE_" + user.getRole());
             
-            // 添加用户的具体权限（如果有）
-            // 注意：这里需要根据实际情况从数据库加载用户的权限
-            // 由于我们的权限模块还在开发中，暂时只添加角色权限
+            // 添加用户的具体权限
+            try {
+                List<com.example.fcproject.model.Permission> userPermissions = fcUserService.getPermissionsByUserId(user.getId());
+                for (com.example.fcproject.model.Permission permission : userPermissions) {
+                    authorities.add(permission.getCode());
+                }
+            } catch (Exception e) {
+                // 权限加载失败时不影响用户登录
+                e.printStackTrace();
+            }
             
             // 将FcUser转换为Spring Security的UserDetails
             return org.springframework.security.core.userdetails.User.builder()
@@ -74,19 +80,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     /**
      * 配置认证管理器
      */
-    @Override
     @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }
-
-    /**
-     * 配置认证规则
-     */
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService())
-                .passwordEncoder(passwordEncoder());
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
     /**
@@ -120,11 +116,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     /**
      * 配置授权规则
      */
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+    @Bean
+    public org.springframework.security.web.SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             // 允许所有用户访问登录页面和静态资源
-            .authorizeRequests()
+            .authorizeHttpRequests()
                 // 允许所有用户访问的资源
                 .antMatchers("/", "/login", "/css/**", "/js/**", "/tournament-tree").permitAll()
                 // 淘汰赛树状图相关API对所有人开放
@@ -166,5 +162,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
             // 关闭CSRF保护（仅用于开发测试）
             .csrf().disable();
+        return http.build();
     }
 }
