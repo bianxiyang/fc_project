@@ -28,7 +28,7 @@ public class MatchDataInitializer {
     @PostConstruct
     public void initializeData() {
         // 初始化用户数据
-        /*initializeUsers();*/
+        initializeUsers();
         
         // 初始化赛程数据
         initializeMatches();

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 锦标赛控制器，用于处理淘汰赛相关的请求
@@ -187,24 +186,8 @@ public class TournamentController {
      * 获取锦标赛所有比赛
      */
     @GetMapping("/{id}/matches")
-    public ResponseEntity<ApiResponse> getTournamentMatches(@PathVariable Integer id, Authentication authentication) {
-        String username = authentication.getName();
-        FcUser currentUser = fcUserRepository.findByUsername(username);
-        List<TournamentMatch> matches;
-        
-        // 检查用户角色，如果是USER角色，只返回该用户参与的比赛
-        boolean isUserRole = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"));
-        
-        if (isUserRole) {
-            List<TournamentMatch> allMatches = tournamentMatchRepository.findByTournamentId(id);
-            matches = allMatches.stream()
-                    .filter(match -> match.getHomeTeam().equals(currentUser) || match.getAwayTeam().equals(currentUser))
-                    .collect(Collectors.toList());
-        } else {
-            matches = tournamentMatchRepository.findByTournamentId(id);
-        }
-        
+    public ResponseEntity<ApiResponse> getTournamentMatches(@PathVariable Integer id) {
+        List<TournamentMatch> matches = tournamentMatchRepository.findByTournamentId(id);
         return ResponseEntity.ok(
                 ApiResponse.success("获取锦标赛比赛成功", matches)
         );
@@ -428,31 +411,8 @@ public class TournamentController {
      * 获取所有锦标赛
      */
     @GetMapping
-    public ResponseEntity<ApiResponse> getAllTournaments(Authentication authentication) {
-        String username = authentication.getName();
-        FcUser currentUser = fcUserRepository.findByUsername(username);
-        List<Tournament> tournaments;
-        
-        // 检查用户角色，如果是USER角色，只返回该用户参与的锦标赛
-        boolean isUserRole = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"));
-        
-        if (isUserRole) {
-            // 获取用户参与的所有锦标赛
-            List<TournamentParticipant> participants = tournamentParticipantRepository.findByUserId(currentUser.getId());
-            List<Integer> tournamentIds = participants.stream()
-                    .map(TournamentParticipant::getTournamentId)
-                    .collect(Collectors.toList());
-            
-            if (tournamentIds.isEmpty()) {
-                tournaments = new ArrayList<>();
-            } else {
-                tournaments = tournamentRepository.findAllById(tournamentIds);
-            }
-        } else {
-            tournaments = tournamentRepository.findAll();
-        }
-        
+    public ResponseEntity<ApiResponse> getAllTournaments() {
+        List<Tournament> tournaments = tournamentRepository.findAll();
         return ResponseEntity.ok(
                 ApiResponse.success("获取所有锦标赛成功", tournaments)
         );
