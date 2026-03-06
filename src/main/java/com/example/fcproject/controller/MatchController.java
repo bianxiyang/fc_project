@@ -276,8 +276,24 @@ public class MatchController {
     
     // 获取指定轮次的比赛
     @GetMapping("/round/{round}")
-    public ResponseEntity<ApiResponse> getMatchesByRound(@PathVariable Integer round) {
-        List<Match> matches = matchRepository.findByRound(round);
+    public ResponseEntity<ApiResponse> getMatchesByRound(@PathVariable Integer round, Authentication authentication) {
+        String username = authentication.getName();
+        FcUser currentUser = fcUserRepository.findByUsername(username);
+        List<Match> matches;
+        
+        // 检查用户角色，如果是USER角色，只返回该用户参与的比赛
+        boolean isUserRole = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"));
+        
+        if (isUserRole) {
+            List<Match> allMatches = matchRepository.findByRound(round);
+            matches = allMatches.stream()
+                    .filter(match -> match.getHomeTeam().equals(currentUser) || match.getAwayTeam().equals(currentUser))
+                    .collect(Collectors.toList());
+        } else {
+            matches = matchRepository.findByRound(round);
+        }
+        
         return ResponseEntity.ok(
                 ApiResponse.success("获取指定轮次的比赛成功", matches)
         );
@@ -285,8 +301,24 @@ public class MatchController {
 
     // 获取指定状态的比赛
     @GetMapping("/status/{status}")
-    public ResponseEntity<ApiResponse> getMatchesByStatus(@PathVariable Short status) {
-        List<Match> matches = matchRepository.findByStatus(status);
+    public ResponseEntity<ApiResponse> getMatchesByStatus(@PathVariable Short status, Authentication authentication) {
+        String username = authentication.getName();
+        FcUser currentUser = fcUserRepository.findByUsername(username);
+        List<Match> matches;
+        
+        // 检查用户角色，如果是USER角色，只返回该用户参与的比赛
+        boolean isUserRole = authentication.getAuthorities().stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_USER"));
+        
+        if (isUserRole) {
+            List<Match> allMatches = matchRepository.findByStatus(status);
+            matches = allMatches.stream()
+                    .filter(match -> match.getHomeTeam().equals(currentUser) || match.getAwayTeam().equals(currentUser))
+                    .collect(Collectors.toList());
+        } else {
+            matches = matchRepository.findByStatus(status);
+        }
+        
         return ResponseEntity.ok(
                 ApiResponse.success("获取指定状态比赛成功", matches)
         );
