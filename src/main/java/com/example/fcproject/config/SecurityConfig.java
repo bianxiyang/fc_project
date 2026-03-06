@@ -127,8 +127,8 @@ public class SecurityConfig {
                 .antMatchers("/api/tournaments", "/api/tournaments/**/bracket").permitAll()
                 // API端点：比分保存相关操作，USER角色可以修改自己参与的比赛，ADMIN/ROOT可以修改所有比赛
                 .antMatchers(HttpMethod.PUT, "/api/matches/**/score").hasAnyRole("USER", "ADMIN", "ROOT")
-                // 创建比赛只有管理员可以访问
-                .antMatchers(HttpMethod.POST, "/api/matches/**").hasRole("ADMIN")
+                // 创建比赛和生成赛程：管理员和超级管理员可以访问
+                .antMatchers(HttpMethod.POST, "/api/matches/**").hasAnyRole("ADMIN", "ROOT")
                 // 审核相关API：只有超级管理员可以访问
                 .antMatchers("/api/matches/audit/**").hasRole("ROOT")
                 // 淘汰赛审核相关API：只有超级管理员可以访问
