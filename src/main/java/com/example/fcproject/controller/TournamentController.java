@@ -100,22 +100,29 @@ public class TournamentController {
         List<FcUser> remainingParticipants = new ArrayList<>(participants);
         Collections.shuffle(remainingParticipants);
 
-        // 如果参与者数量是奇数，添加一个虚拟轮空用户
-        if (remainingParticipants.size() % 2 != 0) {
+        // 如果参与者数量不是2的幂次方，计算需要填充的空位置
+        int participantCount = remainingParticipants.size();
+        int powerOfTwo = 1;
+        while (powerOfTwo < participantCount) {
+            powerOfTwo *= 2;
+        }
+        int byeCount = powerOfTwo - participantCount;
+        for (int i = 0; i < byeCount; i++) {
             remainingParticipants.add(null); // null表示轮空
         }
 
         int round = 1;
-        
+
         // 生成所有轮次的比赛，直到决赛
         // 对于8个用户，应该生成3轮比赛：8进4、4进2、决赛
         while (remainingParticipants.size() > 1) {
             generateRoundMatches(tournament, round, remainingParticipants);
-            
+
             // 准备下一轮参与者（当前轮次的获胜者位置，初始为null）
             List<FcUser> nextRoundParticipants = new ArrayList<>();
             // 下一轮参与者数量是当前轮次的一半
-            for (int i = 0; i < remainingParticipants.size() / 2; i++) {
+            int nextRoundSize = remainingParticipants.size() / 2;
+            for (int i = 0; i < nextRoundSize; i++) {
                 nextRoundParticipants.add(null);
             }
             remainingParticipants = nextRoundParticipants;
